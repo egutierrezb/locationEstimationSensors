@@ -1,0 +1,6 @@
+rm Tinside*
+rm Toutside*
+rm TINSIDE*
+rm TOUTSIDE*
+rm TARGETGRIDMAXAREA.mat
+rm TargetGridMaxArea*

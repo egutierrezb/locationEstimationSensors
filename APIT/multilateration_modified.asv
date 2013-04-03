@@ -1,0 +1,141 @@
+function [Estimatedcoordinates_mult]=multilateration_MODIFIED(Estimatedcoordinates, Audibleanchors, dMLE, TrueDist, Noise, BiasFactor, Indices, X)
+
+%Estimatedcoordinates are the initial positions, we are going to use
+%Newton-Raphson/least-squares within the paper of Localization of Sensors
+%First we are going to use TrueDist, after we have to consider an approach
+%to consider noisy measurements.
+
+%A refers to the anchor
+%so to the initial point
+%we should need the 
+%D_A1 distance from A1 to i
+Estimatedcoordinates_mult=[];
+Num_iteraciones=0;
+np=2.3;
+do=1;
+dev_standard=3.92;
+P0=-37.466;
+
+global M N
+epsilon=0.1; %accuracy between estimated coordinates and true coordinates, in order to break the cycle
+cont=1;
+flag=0;
+
+for i=1:(M+N)
+    Findtarget=[];
+    Findindex=[];
+    Coordinatesanchor=[];
+    Nodesforanchor=[];
+    Aiter=[]; %initialization of arrays
+    b=[];
+    Weights=[];
+    Dist=[];
+    Pij_est=[];
+    dMLE_est=[];
+    Findtarget=find(Estimatedcoordinates(:,1)==i);
+    Findindex=find(Indices(:,1)==i); %if index is found->Findindex is nonempty,it should be empty so it is a TargetNode
+    E_So=1000; %dummies
+    E_Soprime=1;
+    
+    if (isempty(Findtarget)==0) & (isempty(Findindex)==1) 
+           fprintf(1,'--Refining position of node %d\n',i);
+           So=Estimatedcoordinates(Findtarget(1),2:3); %retrieves {x,y} from the estimated node to be considered as a seed.
+           Nodesforanchor=find(Audibleanchors(:,1)==i); %Search for the rows for the particular target node, from the rows we can obtain the anchors.
+           [m n]=size(Nodesforanchor);
+           
+           if m>=3 %Means that a target node has three or more anchors, thus multilateration has a sense and we can refine the position of the node, otherwise, we can not refine the position of the node.
+               for h=1:m
+                   %Coordinatesanchors will contain the rows for the anchors of
+                   %the target node, so we can use the coordinates in columns 2
+                   %and 3, I have to put a flag because in the
+                   %Estimatedcoordinates we may not have the coordinates of the
+                   %indices, or we have to concatenate the Estimatedcoordinates
+                   %with the indices,
+                   Coordinatesanchor(h)=find(Estimatedcoordinates(:,1)==Audibleanchors(Nodesforanchor(h),2)); %Try to find the audibleanchor in Estimatedcoordinates
+               end
+               [o p]=size(Coordinatesanchor);
+               %Create weights for the process of multilateration, variance of
+               %the distance is multiplicative
+               for j=1:p
+                    Dist(j)=sqrt((Estimatedcoordinates(Coordinatesanchor(j),2)-X(i,1))^2+(Estimatedcoordinates(Coordinatesanchor(j),3)-X(i,2))^2);
+                    Pij_est(j)=P0-(10*np*log10(Dist(j).*(1/do)));
+                    if(Noise==1)
+                        Unit_GaussianRandom=dev_standard*randn(1);
+                    else
+                        Unit_GaussianRandom=zeros(1);
+                    end
+                    Pij_est(j)=Pij_est(j)+Unit_GaussianRandom;
+                    dMLE_est(j)=do*(10.^((P0-Pij_est(j))./(10*np)));
+               end
+               %Computation of Weights
+               if Noise==1
+                   for k=1:p
+                       for l=1:p
+                           if k==l
+                               Weights(l,k)=1/(1+(((BiasFactor^4)-BiasFactor)*(dMLE_est(k))^2)); %variance between anchor and target node
+                           else
+                               Weights(l,k)=0;
+                           end
+                       end
+                   end
+               else
+                    for k=1:p
+                       for l=1:p
+                           if k==l
+                               Weights(l,k)=1;
+                           else
+                               Weights(l,k)=0;
+                           end
+                       end
+                    end
+               end
+
+               while(abs(E_Soprime-E_So)>epsilon) & (Num_iteraciones<=10)
+                   Num_iteraciones=Num_iteraciones+1;
+                   Aiter=[];
+                   b=[];
+                   E_Soprime=0;
+                   E_So=0;
+                   for j=1:p %Now we are in the phase of the anchors of a specific EStimatedcoordinated
+                        Aiter_concat=[(So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))/sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2) (So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))/sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2)];
+                        Busq_NAN=[];
+                        Busq_NAN=find(isnan(Aiter_concat)==1); %We have the problem of [NaN NaN] because So and Estimatedcoordinates have the same value, this occurs when two nodes shares the same position, thus they listen to each other
+                        [u v]=size(Busq_NAN);
+                        if v==2
+                            Estimatedcoordinates(Coordinatesanchor(j),2:3)
+                            So
+                            flag=1;
+                            break;                        
+                        else
+                            Aiter=[Aiter; Aiter_concat]; %the size of Aiter will depend of the number of anchors for the particular estimated node    
+                            b_concat=[[(So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))/sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2) ((So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))/sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2))]*So' - ((sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2))-dMLE_est(j))];
+                            b=[b; b_concat];
+                            E_So_concat=(power((sqrt((So(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(So(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2))-dMLE_est(j),2));
+                            E_So=E_So+E_So_concat;
+                        end
+                   end
+                   %inv or pinv?
+                   %COND=cond((Aiter')*Weights*Aiter)
+                   if flag==0
+                       Soprime=inv((Aiter')*Weights*Aiter)*(Aiter')*Weights*b; %New So computed
+                       Soprime=Soprime';
+                       for j=1:p
+                            E_Soprime_concat=(power((sqrt((Soprime(1,1)-Estimatedcoordinates(Coordinatesanchor(j),2))^2+(Soprime(1,2)-Estimatedcoordinates(Coordinatesanchor(j),3))^2))-dMLE_est(j),2)); %Compute the squared error between the observed ranges ri and the predicted distancies for Soprime
+                            E_Soprime=E_Soprime+E_Soprime_concat;
+                       end
+                       So=Soprime; %Update values
+                   else
+                       break;
+                   end
+               end
+               fprintf(1,'--Num_iteraciones %d\n',Num_iteraciones);
+               Num_iteraciones=0;
+               flag=0;
+               Estimatedcoordinates_mult(cont,:)=[i So];
+              % flag=1;
+               cont=cont+1;
+           end
+    end
+end
+
+   

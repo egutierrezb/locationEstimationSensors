@@ -1,0 +1,109 @@
+ALGORITHM IN SHARCNET
+
+-We consider a phase of running in parallel when computing the triangles for each anchor,
+then we concate the tables inside and outside of these results to run the APIT Aggregation
+routine and obtain the final results
+
+1. To run in the shell
+
+
+Files:
+
+a) APIT_randomnonoise_parallel_shell -> Renamed in shell as APIT_randomnonoise_parallel
+* Save the following matrices in GeneralTopology.mat
+- M
+- N
+- Res
+- X
+- Audibleanchors
+- Pij
+- Neighborhood
+- Indices
+- H 
+b) drawtriangles_parallel
+* Load matrices previous saved in GeneralTopology.mat
+* Save the following matrices in Tinside#Node.mat and Toutside#Node.mat
+- TableNodesInside
+- TableNodesOutside
+c) concatenateinout
+* Load matrices in GeneralTopology.mat
+- M
+- N
+* Save the following matrices 
+- TINSIDE
+- TOUTSIDE
+d) APITAggregation_estimation_parallel
+* Load matrices in GeneralTopology.mat
+- M
+- N
+- Res
+- X
+- Audibleanchors
+- Pij
+- Neighborhood
+- Indices
+- H
+* Load matrices in TINSIDE.mat and TOUTSIDE.mat
+- TINSIDE
+- TOUTSIDE
+
+2. Steps to execute the scripts
+
+Everything is executed from ther dir APIT_Recent
+
+a) Execute APIT_randomnonoise_parallel
+	sqsub -o ./results/APIT_parallel.%J /opt/sharcnet/octave/2.9.12/octave APIT_randomnonoise_parallel.m 
+
+* It should be only run once
+* It generates APIT_parallel.%J files
+
+b) Execute drawtriangles_parallel
+
+$] ./rundataexp 
+
+* It should be run according to the total number of nodes N+M
+* rundataexp invokes ./execnode which at the same time records the number of node and number of the file for 
+generating each of the Tableinsides and Tableoutsides
+* It generates drawtriangles_parallel.%J files
+*It generates Tinside#node.mat and Toutside#node.mat tables
+
+c) Execute concatenateinout
+* Because we are dealing with large matrices, its better to submit the job
+
+	sqsub -o ./results/concatenateinout.%J 	/opt/sharcnet/octave/2.9.12/octave concatenateinout.m
+
+*It generates TINSIDE.mat and TOUTSIDE.mat
+
+d) Execute APITAggregation_estimation_parallel
+	
+	sqsub -o ./results/Results.%J /opt/sharcnet/octave/2.9.12/octave APITAggregation_estimation_parallel.m
+
+*It generates Statistics.mat with the final results (RMSE and number of estimated nodes)
+*Finish.
+
+-OR-
+
+d) Execute APITAggregation_parallel
+
+$] ./rundataexp2
+
+* It invokes ./execnode2
+% Generates APITAggregation_parallel.%J files
+*It generates TargetGridMaxArea#node.mat tables
+
+e) Execute concatenateinout_APITAggregation
+
+	sqsub -o ./results/concatenateinout_APITAggregation.%J 	/opt/sharcnet/octave/2.9.12/octave concatenateinout_APITAggregation.m
+
+*It generates TARGETGRIDMAXAREA.mat
+
+
+f) Execute COG_estimation_parallel
+	sqsub -o ./results/Results.%J /opt/sharcnet/octave/2.9.12/octave COG_estimation_parallel.m
+*It generates Statistics.mat with the final results (RMSE and number of estimated nodes)
+*Finish
+
+--->
+
+In order to save time we have to upload the following files
+COG_estimation_parallel, APITAggregation_parallel, concatenateinout_APITAggregation

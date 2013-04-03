@@ -1,0 +1,10 @@
+ALTERNATIVE TEST
+Los nodos que estan dentro del triangulo.... falla el test con angulos...
+Ponerlo como observacion... que la mayoria de los errores son introducidos cuando las comparaciones se hacen
+para los nodos que estan dentro del triangulo Erroranglei/tablesinside.. que Errorangleo/tablesoutside (62/66, 62/288)
+la cosa seria evaluar mas nodos que estuvieran dentro de los triangulos... el problema es que estamos evaluando
+triangulos que son pequenos... la densidad de nodos afuera es mayor que los que estan dentro...
+si aumentamos ruido... no importa para los nodos que estan afuera.. para los nodos que estan dentro les afecta..
+Pero son pocos!!!! entonces el numero de errores no aumenta muchos (la proporcion) y la estimacion de error tampoco afecta tanto.!!!!!
+REFINEMENT
+Con poco ruido crece mucho el refinement

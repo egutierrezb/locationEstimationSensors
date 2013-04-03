@@ -1,0 +1,55 @@
+   X(O)         X
+
+
+
+            O 
+        A            X 
+    O      O 
+
+
+inf y1
+x1  y2
+x2  y3
+
+
+Res=1
+error=0.95017
+est=7
+
+M=45
+N=20
+Res=0.5
+R=2.8
+ANR=1
+error=0.96637
+AH=3.8667
+ND=6.9231
+est=8
+[4 8 18 26 28 50 54 57]
+
+Res=0.2
+eror=0.89378
+est=8
+
+Res=0.1
+error=0.87942
+est=8
+
+
+w 2nd run
+
+Res=0.5
+error1=0.96637
+error2=1.0917
+errort=1.0516
+est1=8
+est2=16
+estt=24
+
+Res=0.2
+error1=0.89378
+error2=1.1486
+errort=1.0704
+est1=8
+est2=16
+estt=24

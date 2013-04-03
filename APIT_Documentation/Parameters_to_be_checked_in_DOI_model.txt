@@ -1,0 +1,6 @@
+Parameters to be checked in DOI model.
+
+1. Upper and lower bounds: Which are the communication ranges that define these bounds? When the communication
+is assured and when there is no communication.
+2. In DOI Adjusted Pathloss=Pathloss x Ki, What model does the pathloss has to follow?
+

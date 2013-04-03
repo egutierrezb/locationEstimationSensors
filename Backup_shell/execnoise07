@@ -1,0 +1,1 @@
+echo "$1" | /opt/sharcnet/octave/2.9.13/octave Iterative_APIT_random_noise_parallel-07.m

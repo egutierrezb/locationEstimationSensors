@@ -1,0 +1,54 @@
+tic
+%Declare global variables in order to manipulate the code faster
+global M N Res 
+%Define number of blindfolded devices
+M=30;
+%Define number of referene devices
+N=15; %AP=15%
+%Define resolution of the grid
+Res=0.5; %0.1Dist_Neighborhood
+[X, Indices]=deploy_nodes_random();
+%Define connectivity and neighbors between nodes in the graph
+[TrueDist,Neighborhood,Audibleanchors]=connectivity_ANR(X,Indices);
+%Characterization of the medium
+Pij=empmodel(TrueDist);
+%Function for drawing triangles
+[InsideorOutside, TableNodesOutside, TableNodesInside, TableNodesOutsidetempo, Nodeswecannotestimate]=drawtriangles_fst(X,Audibleanchors,Pij,Neighborhood,Indices);
+%Function to make the aggregation
+[Insidethetriangleo, Insidethetrianglei, Target_GridMaxArea, Suma_total_d, Suma_total, Positiveareas, Negativeareas]=APITAggregation_fst2(X,TableNodesOutside, TableNodesInside, Indices);
+%Function to compute the COG for each node with the maximum overlapping
+%area
+Estimatedcoordinates=COG(Target_GridMaxArea, Indices);
+Xnodes=drawlinesrealestpos(Estimatedcoordinates,X);
+Error=RMSE(Xnodes,Estimatedcoordinates);
+%------------------------SECOND STAGE: CODIGO A PRUEBA------------------
+%At the end of the algorithm we may have the Estimatedcoordinates of some
+%nodes and the True Positions of all nodes (blindfolded devices + anchors)
+%In the second stage, we may take the Estimatedcoordinates as anchors
+%(instead of Indices) for the connectivity_ANR function and instead of X we
+%may have the targetNodes we couldnt estimate (i.e. Nodeswecannotestimate
+%their positions and the positions of Estimatedcoordinates).
+%We do not have to run the empmodel function again
+%We may run drawtriangles_fst with X and Indices as stated before.. we have
+%Audibleanchors and Neighborhood the outputs of connectivity_ANR. At the
+%end of the run of drawtriangles_fst we probably have Nodeswecannotestimate
+%again (make the algorithm recursive?). Run APITAggregation_fst2 with X and
+%Indices as stated before, COG the same and we obtain new
+%Estimatedcoordinates. These estimatedcoordinates should be compared with X
+%and we obtain Error for the second run of the algorithm
+%--------------------------------------------------------------------------
+%What do we have to compute just once?
+%H-->grid
+%TrueDist-->pair-wise distances
+%Pij--> pair-wise powers
+
+%Assign which nodes we have to compute their position (XRemainingNodes) and which ones are
+%going to work as anchors (NewAnchors)
+[XRemainingNodes, NewAnchors]=assign_nodes(Estimatedcoordinates,X,Nodeswecannotestimate);
+[TrueDist,Neighborhood_Remaining,Audibleanchors_Remaining]=connectivity_ANR(XRemainingNodes,NewAnchors);
+[InsideorOutside_Remaining, TableNodesOutside_Remaining, TableNodesInside_Remaining, TableNodesOutsidetempo_Remaining, Nodesnoposition_end]=drawtriangles_fst(XRemainingNodes,Audibleanchors_Remaining,Pij, Neighborhood_Remaining,NewAnchors);
+[Insidethetriangleo_Remaining, Insidethetrianglei_Remaining, Target_GridMaxArea_Remaining, Suma_total_d_Remaining, Suma_total_Remaining, Positiveareas_Remaining, Negativeareas_Remaining]=APITAggregation_fst2(XRemainingNodes,TableNodesOutside_Remaining, TableNodesInside_Remaining, NewAnchors);
+Estimatedcoordinates_Remaining=COG(Target_GridMaxArea_Remaining, NewAnchors);
+XRemainingNodes_i=drawlinesrealestpos(Estimatedcoordinates_Remaining,XRemainingNodes);
+Error_2=RMSE(XRemainingNodes_i,Estimatedcoordinates_Remaining);
+toc

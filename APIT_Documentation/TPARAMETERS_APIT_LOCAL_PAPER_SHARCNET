@@ -1,0 +1,24 @@
+		APIT_NONOISE (sharcnet)		APIT_NONOISE (local)		APIT_NOISE (local)		APIT_NOISE(progress_report_simul)	
+M			100							30						30						30
+N			{13,15,17,...}. Now in 17			20						20						varies (3~15)
+ANR	 	10							1						1						1
+R			1.7							4.57						4.57						4.58
+Res			0.17							0.5						0.5						0.5
+Grid			[0 10]						[0 10]					[0 10]					[0 10]
+DOI			0							0						varies					0
+_____________________________________________________________________________________________________________________
+Pt			-37.466						-37.466					-37.466					-37.466
+np			2.3							2.3						2.3						2.3
+do			0.1							1						1						1
+devstd		3.92							3.92						3.92						3.92
+______________________________________________________________________________________________________________________
+
+Notes: APIT_NONOISE (sharcnet) being run in parallel through ./mainrunAPITparallelnonoisetwo
+Terribly inefficient to run the algorithm in local w/out parallelism (we can not increase M /N/Res/ANR too much)
+[Pt, np, do ] Parameters for the exponential decay.
+
+
+
+
+
+devstd Parameter not used, if the noise model is gaussian then we can use it. (Not for DOI)  

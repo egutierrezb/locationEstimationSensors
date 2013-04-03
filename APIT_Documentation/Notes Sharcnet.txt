@@ -1,0 +1,7 @@
+Repitiendo experimento APIT Paper. Paper Range Free Localization Schemes for Large Sensor Networks. Localization error
+when varying AH.
+
+Codigo sin optimizar
+Iterative_APIT_random_nonoise.9 -> AH =9, ND =8, DOI=0
+Iterative_APIT_random_nonoise.13-> AH =13, ND =8, DOI=0 (Job .14915 Sharcnet)
+

@@ -1,0 +1,25 @@
+DOI0-1-10 -->Resultados a comparar
+DOI2-0-10
+
+
+DOI=0.2
+
+M=100
+N=10
+ANR=1
+R=4.57
+Res=0.5
+Pt=-37 dBm
+di=1
+np=2.3
+
+_________________
+
+M=100
+N=15
+ANR=1
+R=4.57
+Res=0.5
+Pt=-37 dBm
+di=1
+np=2.3

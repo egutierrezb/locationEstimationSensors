@@ -1,0 +1,159 @@
+readwaitlistjobs () {
+	stringt=""
+	sqjobs > lookssqjobs
+	#Filters the first and third columns of sqjobs file
+	cat lookssqjobs | awk '{print $1}'  > lookssqjobsfiltered
+	#Which processes are running
+	#grep R lookssqjobsfiltered > lookssqjobsfiltered
+	#Filters the first column of the processes that are running
+	#cat lookssqjobsfiltered | awk '{print $1}' > lookssqjobsfiltered
+	#For iterations
+	i=0
+	cont=0
+	#How many lines I have in the file
+	while read myline
+	do
+	    #To count the lines of the filehen
+	    let cont++
+	done < lookssqjobsfiltered
+	res=`expr $cont - 1`
+	#obtains each line of the file
+	while read mylinetwo
+	do
+	 array[$i]=$mylinetwo
+	 if [ $i -gt 2 ] && [ $i -ne $res ]; then
+	    stringt="$stringt,${array[$i]}"
+	 elif [ $i -eq 2 ]; then
+	    stringt="${array[$i]}"
+	 fi
+	 let i++
+	done < lookssqjobsfiltered
+	#prints the entire string for the jobs
+	echo "Jobs to wait: $stringt"	
+	string=$stringt
+#	echo "$string"
+#	return string
+}
+#Main Script for Iterative APIT ( 1 cycle)
+for ((a=1; a<=1; a++))
+do
+	############################FIRST RUN##############################################################
+	if [ $a -eq 1 ]; then
+	# To generate the topology of APIT
+	    sqsub.new -o ./results/APIT_parallel.%J /opt/sharcnet/octave/2.9.13/octave APIT_randomnonoise_parallel.m
+	elif [ $a -gt 1 ]; then
+	    sqrun.new --bg -w "$string" -o ./results/APIT_parallel.%J /opt/sharcnet/octave/2.9.13/octave APIT_randomnonoise_parallel.m
+	fi
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	#Routine that calls different values of nodes and invokes the scripts execnode that echoes a node, i up to the total 
+	#number of nodes N+M
+	for (( i=1 ; i<=320; i++ ))
+	do
+	    sqrun.new --bg -w "$string" -o ./results/drawtriangles_parallel.%J ./execnode "$i"  
+	done
+
+	checkstatus="checkstatus"$a""
+	bjobs -l $string > $checkstatus		
+
+   	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	# Concatenate Tablesinside and Tablesoutside for each node
+	sqrun.new --bg -w "$string" -o ./results/concatenateinout.%J /opt/sharcnet/octave/2.9.13/octave concatenateinout.m
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	#Same routine that rundataexp but it invokes APITAggregation_parallel, i up to the total number of nodes
+	#N+M
+	for (( i=1; i<=320; i++ ))
+	do
+	    sqrun.new --bg -w "$string" -o ./results/APITAggregation_parallel.%J ./execnode2 "$i"
+	done
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	# Concatenate TargetGirdMaxAreas for each node
+	sqrun.new --bg -w "$string" -o ./results/concatenateinout_APITAggregation.%J /opt/sharcnet/octave/2.9.13/octave concatenateinout_APITAggregation.m
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	# Run Rest of the algorithm COG and RMSE and save the results in Statistics
+	sqrun.new --bg -w "$string" -o ./results/Results.%J ./execit "$a"
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	#Eliminate files Tinside, Toutside, TINSIDE, TOUTSIDE, TargetGridMaxArea, TARGETGRIDMAXAREA, GeneralTopology
+	#We have to preserve Statistics[a].mat for further reading, the [ ] is not included  
+	sqrun.new --bg -w "$string" -o ./results/trash.%J ./eliminatefiles
+	
+	echo "Simple APIT done"
+	
+	checkjobs="checkjb"$a""
+	sqjobs > $checkjobs
+	
+	##########################ASSIGN FIRST ESTIMATES AS NEW ANCHORS#####################
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	sqrun.new --bg -w "$string" -o ./results/Assignnewnodes.%J ./execnewnodes
+	
+	readwaitlistjobs
+
+	##########################SECOND RUN##################################################	
+	#Routine that calls different values of nodes and invokes the scripts execnode that echoes a node, i up to the total 
+	#number of nodes N+M
+	for (( i=1 ; i<=320; i++ ))
+	do
+	    sqrun.new --bg -w "$string" -o ./results/drawtriangles_parallel.%J ./execnode "$i"  
+	done
+
+	checkstatus="checkstatus"$a""
+	bjobs -l $string > $checkstatus		
+
+   	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	# Concatenate Tablesinside and Tablesoutside for each node
+	sqrun.new --bg -w "$string" -o ./results/concatenateinout.%J /opt/sharcnet/octave/2.9.13/octave concatenateinout.m
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	#Same routine that rundataexp but it invokes APITAggregation_parallel, up to the total number of nodes
+	#N+M
+	for (( i=1; i<=320; i++ ))
+	do
+	    sqrun.new --bg -w "$string" -o ./results/APITAggregation_parallel.%J ./execnode2 "$i"
+	done
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	# Concatenate TargetGirdMaxAreas for each node
+	sqrun.new --bg -w "$string" -o ./results/concatenateinout_APITAggregation.%J /opt/sharcnet/octave/2.9.13/octave concatenateinout_APITAggregation.m
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	secondround=`expr $a + 1`
+
+	# Run Rest of the algorithm COG and RMSE and save the results in Statistics
+	sqrun.new --bg -w "$string" -o ./results/Results.%J ./execittot "$secondround"
+	
+	#Read jobsids and knows which jobs it should wait in order to run
+	readwaitlistjobs
+	
+	#Eliminate files Tinside, Toutside, TINSIDE, TOUTSIDE, TargetGridMaxArea, TARGETGRIDMAXAREA, GeneralTopology
+	#We have to preserve Statistics[num].mat for further reading
+	sqrun.new --bg -w "$string" -o ./results/trash.%J ./eliminatefiles
+
+	echo "Iterative APIT done (1 cycle)"
+	#At the end of the day, we get Statistics1.mat with the location error and number of estimates of the first round.
+	#Statistics2.mat with the location error and number of estimates of the second round.
+done
+exit 0

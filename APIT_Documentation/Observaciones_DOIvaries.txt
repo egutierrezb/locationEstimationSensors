@@ -1,0 +1,11 @@
+Fixed anchors M=200 N=100
+0.563610 DOI=0.1 DOI=0.7 Res=0.5 dI=1 M
+0.56...
+Dan los mismos valores, porque?
+
+2. Bajar Res=0.15 y di=0.1 M
+1. Correr para fixed anchors si aumenta, pero no mucho
+(DOI=0.1 (x) y DOI=0.7 (x) DOI=2 )emp
+
+
+

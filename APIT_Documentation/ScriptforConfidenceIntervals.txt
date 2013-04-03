@@ -1,0 +1,19 @@
+plot(N,ESN,'+','MarkerFaceColor','k')
+plot(N,EIN,'+','MarkerFaceColor','k')
+line([N N]',[ESN EIN]','Color','k') // si estan verticales
+line([N' N']',[ESN' EIN']','Color','k') //si estan horizontales
+
+---------
+plot(N,E1I,'+','MarkerFaceColor','k')
+hold on;
+plot(N,E1S,'+','MarkerFaceColor','k'); hold on;
+line([N N]',[E1S E1I]','Color','k')
+plot(N,E1,'ko-','MarkerFaceColor','k')
+plot(N,E2S,'+','MarkerFaceColor','k'); 
+plot(N,E2I,'+','MarkerFaceColor','k');
+line([N N]',[E2S E2I]','Color','k')
+plot(N,E2,'ko-','MarkerFaceColor','k')
+plot(N,ETI,'+','MarkerFaceColor','k');
+plot(N,ETS,'+','MarkerFaceColor','k');
+line([N N]',[ETS ETI]','Color','k')
+plot(N,ET,'ko-','MarkerFaceColor','k')

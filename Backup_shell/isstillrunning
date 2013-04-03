@@ -1,0 +1,25 @@
+#Doomy piece of code for existancejobs, just to enter the while loop
+echo "File not empty" > existancejobs
+#Repeat this meanwhile there is no filewithexits, check constantly and if existancejobs has something on it meaning that there are jobs to check out... if it is still in the loop it is working fine
+while [ ! -s filewithexits ] && [ -s  existancejobs ]
+do
+#To check if there are jobs in the list, meaning that there are jobs even running, suspended or exit
+bjobs > existancejobs
+#Print that everything is fine, no EXITS jobs have been found
+echo "No EXITs jobs have been found so far..."
+#Obtains if there are some jobs that have exit suddenly
+bjobs | grep EXIT > filewithexits
+done
+if [ ! -s existancejobs ] && [ ! -s filewithexits ]; then
+ #Means that existancejobs and filewithexits are empty, so the jobs have finished
+  echo "mainrunAPITparallelnonoise twohas succesfully run!"
+fi
+if [ -s filewithexits ]; then
+ #Means that filewithexits exists and there were at least one job that failed
+ echo "mainrunAPITparallelnonoise fail!"
+fi
+#Outside of the loop, means that filewithexits exists and we should kill all the jobs
+sqkill -all
+#We should eliminate the files in /APIT_Recent
+./eliminatefiles
+

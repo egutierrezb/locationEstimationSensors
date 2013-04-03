@@ -1,0 +1,8 @@
+Dudas que le podemos enviar a los autores de [APIT] o del paper de [Performance Evaluation of Range-Free Loc]
+1. Como pueden definir ND como parametro de la simulacion (es un promedio?) ya que los nodos
+son puestos aleatoriamente.
+*En mi simulacion, lo que hago es definir (como no tengo ruido DOI=0), el numero de anchors, el numero de blindfolded
+devices, y a partir de ahi tengo AH y ND. Pero en el paper de API parece que tienen las graficas en base de parametros
+constantes de ND y AH.
+2. Como pueden definir AH como parametro de la simulacion (es un promedio?) ya que los nodos 
+son puestos aleatoriamente.

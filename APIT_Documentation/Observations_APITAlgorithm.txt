@@ -1,0 +1,30 @@
+1. We can not estimate the position of a target node when:
+   a. There are no 3 audible anchors for that target nodes. Thus there's no chance to build any triangle.
+   b. When the node do not reside inside of any triangle built from the audible anchors.
+2. When DOI is applied to the algorithm we may expect: (as we run it in different trials)
+   a. Parameters fixed (M N Random Res Grid ANR) Variable (DOI) the Error Estimation may increase.
+   b. Parameters fixed (M Random Res Grd ANR DOI) Variable (N) the Error Estimation may decrease.
+   How many blindfolded devices? M= 30?
+   Res=0.5
+   Grd=[0 10]
+   ANR=2
+   DOI=0
+   Dist_neighborhood=2.8
+   N varies from 5,7,9,11,13,15,17,19,21
+3. Authors did not investigate anchor deployment strategies on estimation accuracy
+   a. Same number of anchors, different anchor deployment can produce large difference in estimation accuracy.
+4. Deployment of the anchors
+   a. When anchors are deployed at the edges of the terrain,even deployment of anchors has better estimation accuracy
+   than random deployment of anchors.
+   b. When anchors are deployed inside the terrain, uniform deployment of anchors has better estimation performance 
+   than random deployment
+   c. If anchors radio range is large enough, with the same anchor number, deploying anchors at the edges of terrain
+   always yields smaller average location error than deploying anchors inside the terrain. In contrast, when anchors
+   radio range is small, deploying anchors inside the terrain outperform deploying anchors at the edges of the terrain.
+5. For different anchor deployment strategies, sensor nodes close to the edges of the terrain usually yield large
+   estimation errors, or cannot use APIT to get location estimation because they do not fall within any triangles formed
+   by anchors.
+6. For the simulation which I have run, I see that for different random strategies (random blindfolded devices and
+   random anchors) we can not previsualice the error and may vary from one scenario to another.
+7. Fix the location of the anchors (e.g. the corners, edges, or center of the deployment), in order to have
+   minimized errors and then get the positions of the remaining nodes by using the coordinates of the new anchors?

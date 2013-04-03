@@ -1,0 +1,112 @@
+%In order to avoid conflicts with the shell
+%function [Error_total, Error, Error_2, Error_mult, size_EstimatedCoordinates_row, size_EstimatedCoordinatesr_row, size_Estimatedmult_row, AH, ND]=APIT_randomnonoise_parallel %Invoke function just for compilation if
+% needed
+tic
+%Declare global variables in order to manipulate the code faster
+global M N Res 
+%Define number of blindfolded devices
+%600 trials according to paper, we limited to 10, when we invoke
+%Iterative_APIT_Aggregation
+M=100; %100
+%Define number of referene devices
+N=13;
+%Define resolution of the grid
+Res=0.17; %0.1Dist_Neighborhood %0.17
+[X, Indices, Radio_approx]=deploy_nodes_random_def();
+%Compute TrueDist and matrix for the Grid
+[TrueDist, H]=matrixDist_and_GridOctave(X);
+%Define connectivity and neighbors between nodes in the graph
+[AH, ND, Neighborhood,Audibleanchors, Dist_Anchor]=connectivity_ANR(X,Indices,TrueDist,Radio_approx);
+%Characterization of the medium
+[Pij, dMLE, BiasFactor]=empmodel(TrueDist,0);
+%Save matrices
+save ("-binary", "myMatrix.mat", "M", "N", "Res", "X", "Audibleanchors", "Pij", "Neighborhood", "Indices");
+%Display values of interest, because we are going to use them for drawtriangles_parallel 
+
+%Matrix_environment=fopen('dataexp','w');
+%[Xsizer Xsizec]=size(X);
+%fprintf(Matrix_environment,'echo "');
+%fprintf(Matrix_environment,'[');
+%for i=1:Xsizer
+%    fprintf(Matrix_environment,'%f \t',X(i,:));
+%      if i~=Xsizer
+%        fprintf(Matrix_environment,';');
+        %Prints a backslash at the end of the row
+%        fprintf(Matrix_environment, '\\');
+        %Prints the next row in a new line
+%        fprintf(Matrix_environment, '\n');
+%    end
+%end
+%fprintf(Matrix_environment,']" \n');
+
+%[Audibleanchorssizer Audibleanchorssizec]=size(Audibleanchors);
+%fprintf(Matrix_environment,'echo "');
+%fprintf(Matrix_environment,'[');
+%for i=1:Audibleanchorssizer
+%    fprintf(Matrix_environment,'%d \t',Audibleanchors(i,:));
+%    if i~=Audibleanchorssizer
+%        fprintf(Matrix_environment,';');
+        %Prints a backslash at the end of the row
+%        fprintf(Matrix_environment, '\\');
+        %Prints the next row in a new line
+%        fprintf(Matrix_environment, '\n');
+%    end
+%end
+%fprintf(Matrix_environment,']" \n');
+
+%delimitcol1=1;
+%[Pijsizer Pijsizec]=size(Pij);
+%fprintf(Matrix_environment,'echo "');
+%fprintf(Matrix_environment,'[');
+%for i=1:Pijsizer
+%    while(delimitcol1<Pijsizec)
+%	fprintf(Matrix_environment,'%f \t',Pij(i,delimitcol1));
+	%In order to print in pairs
+%	delimitcol1=delimitcol1+1;
+%	fprintf(Matrix_environment,'\\ \n');
+%   end
+%    if i~=Pijsizer & delimitcol1==Pijsizec
+%        fprintf(Matrix_environment,'%f',Pij(i,delimitcol1));
+%        fprintf(Matrix_environment,'; \\ \n');
+%    end
+%    last_value=delimitcol1;
+%    delimitcol1=1;
+%    delimitcol2=delimitcol1+1;
+%end
+%To print the last value
+%fprintf(Matrix_environment,'%f',Pij(i,last_value));
+%fprintf(Matrix_environment,']" \n');
+
+%[Neighborhoodsizer Neighborhoodsizec]=size(Neighborhood);
+%fprintf(Matrix_environment,'echo "');
+%fprintf(Matrix_environment,'[');
+%for i=1:Neighborhoodsizer
+%    fprintf(Matrix_environment,'%d \t',Neighborhood(i,:));
+%    if i~=Neighborhoodsizer
+%        fprintf(Matrix_environment,';');
+        %Prints a backslash at the end of the row
+%        fprintf(Matrix_environment, '\\');
+        %Prints the next row in a new line
+%        fprintf(Matrix_environment, '\n');
+%    end
+%end
+%fprintf(Matrix_environment,']" \n');
+
+%[Indicessizer Indicessizec]=size(Indices);
+%fprintf(Matrix_environment,'echo "');
+%fprintf(Matrix_environment,'[');
+%for i=1:Indicessizer
+%    fprintf(Matrix_environment,'%d \t',Indices(i,:));
+%    if i~=Indicessizer
+%        fprintf(Matrix_environment,';');
+        %Prints a backslash at the end of the row
+%        fprintf(Matrix_environment, '\\');
+        %Prints the next row in a new line
+%        fprintf(Matrix_environment, '\n');
+%    end
+%end
+%fprintf(Matrix_environment,']" \n');
+%fclose(Matrix_environment);
+%[TableNodesOutside, TableNodesInside, Nodeswecannotestimate, Endprogram]=drawtriangles_parallel(X,Audibleanchors,Pij,Neighborhood,Indices,i);
+%[TableNodesInside TableNodesOutside InOut_testinside InOut_testoutside  InOut_test InOut_realinside InOut_realoutside InOut_real Nodeswecanestimate Endprogram]=RSScomparison_prueba(X, Indices, Audibleanchors,Neighborhood, Pij, Dist_Anchor);
+%Function to make the aggregation

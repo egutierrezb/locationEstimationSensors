@@ -1,0 +1,128 @@
+30-15random1_1_10:
+-1.6 hours to run
+-What fails is the avg number of anchors heard ~6 .. should be greater than 10... (
+We may allocate more beacon nodes)
+- The avg size of the neighborhood is good ~12.47 (should be greater than 6)  
+-The resolution of the grid may not be good in order to bring accurate results
+(however, if we increase the resolution, how much is going to take the simulation to run)
+-Localize 13 from 15 nodes
+-The paper uses a metric: Anchor to Node Range Ratio (ANR):
+The avg. distance an anchor beacon travels divided by the avg. distance a regular node
+signal travels. When this value equals one (Which I assumed for the simulations) the anchor and
+nodes have the same avg. radio range. The larger this value, the fewer anchors required to
+maintain a desired AH value.
+-ANR=1
+-ND=12.47
+-AH=6.4 (Maybe we should not put a threshold)
+-Range of a blindfolded node=Range of a beacon node=4.57m (w/out noise)
+-RSS decays logarithmically without any variance nor noise.
+The possibilities for not locating 2 out of 15 nodes is due to:
+-There are no audible anchors for a specific target node. Thus, there is no 
+possibility to build triangles.-- Check
+Audibleanchors =
+
+     1     9
+     1    20
+     2    10
+     2    11
+     2    15
+     2    16
+     2    22
+     2    24
+     2    27
+     2    29
+     3     9
+     3    10
+     3    11
+     3    13
+     3    16
+     3    17
+     3    19
+     3    20
+     3    22
+     3    27
+     4    10
+     4    11
+     4    15
+     4    16
+     4    22
+     4    29
+     5     9
+     5    13
+     5    17
+     5    20
+     6     9
+     6    10
+     6    11
+     6    13
+     6    16
+     6    17
+     6    19
+     6    20
+     7    10
+     7    11
+     7    15
+     7    16
+     7    22
+     7    29
+     8    10
+     8    15
+     8    16
+     8    19
+     8    21
+     8    22
+     8    24
+     8    25
+     8    27
+     8    29
+    12     9
+    12    20
+    14     9
+    14    10
+    14    13
+    14    16
+    14    17
+    14    19
+    14    20
+    18     9
+    18    13
+    18    17
+    18    20
+    23     9
+    23    13
+    23    16
+    23    17
+    23    19
+    23    20
+    26    10
+    26    11
+    26    15
+    26    16
+    26    19
+    26    22
+    26    24
+    26    27
+    26    29
+    28    10
+    28    11
+    28    13
+    28    15
+    28    16
+    28    17
+    28    22
+    28    29
+    30    10
+    30    15
+    30    16
+    30    19
+    30    21
+    30    22
+    30    24
+    30    25
+    30    27
+    30    29
+-We see that nodes 1 and 12 just listen to two anchors, 1->(9,20); 12->(9,20). Thus
+we can not estimate their position. Solution, consider high-power beacon nodes?
+-Even if the target node is outside of a triangle from the audibleanchors, this is a negative
+area and should be considered a possible region for computing the COG.
+-The estimated positions are pulled to the center of the region. Why?

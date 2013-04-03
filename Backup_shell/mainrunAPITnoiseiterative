@@ -1,0 +1,12 @@
+#for (( i=15; i>=7; i=i-2 ))
+#do
+#sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise "$i"
+#sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise03 "$i"
+#sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise05 "$i"
+#sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise07 "$i"
+#done
+
+sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise "7"
+sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise03 "9"
+sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise05 "7"
+sqsub -o ./results/Noiseiterativedetnodes.%J ./execnoise05 "11"

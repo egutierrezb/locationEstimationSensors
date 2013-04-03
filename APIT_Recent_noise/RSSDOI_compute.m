@@ -1,0 +1,277 @@
+function [RSS_inorout]=RSSDOI_compute(X,Gridpoints,CombinationTriangles)
+global M N DOIv
+
+%Initialization of arrays
+m=[];
+thetar=[];
+thetad=[];
+thetadr=[];
+Pairabovethr=[];
+RSS_noise=[];
+RSSAnchor1_Gridpoints=[];
+RSSAnchor2_Gridpoints=[];
+RSSAnchor3_Gridpoints=[];
+TPAnchor1=[];
+TPAnchor2=[];
+TPAnchor3=[];
+
+%From the paper of Tian He of the Weibull distribution
+%X=alfa(-ln(1-R))^(1/beta), Formula obtained from the book of Simulation
+%1.01 and 0.17 are values obtained from the Appendix dataset of the paper
+%of RIM of Tian He.
+%We use 3 because we have 3 anchors for the triangle
+beta=1.01*ones((1)*360,1); 
+alfa=0.17*ones((1)*360,1); 
+RANDt=rand((1)*360,1);
+RAND=alfa.*((-log(1-RANDt)).^(1./beta));
+
+Num_node=1;
+%We are going to generate 360 values which belong to the different 360 i
+%directions
+%At the end of the for cycle we may have Kis for all the nodes of the
+%network
+
+%Generation of the Kis values according to formula (3) of the paper of RIM
+%In this code we are missing to compute K values when i is not an integer.
+K_Anchor1=zeros((1)*360,2); 
+K_Anchor2=zeros((1)*360,2);
+K_Anchor3=zeros((1)*360,2);
+%Format of K=K[Anchor of the triangle K_Value Direction_in_degrees]
+
+%We use 3 because 3 are the verteces of the triangle
+%CombinationTriangles(1,i), since we want to sweep through the three
+%verteces of the triangle, we use (1) since one row is only passed in the 
+%argument
+for i=1:(1*360)
+    if i==1 | mod(i,360)==1
+        if i==360 %This belongs truly to i=359 (since i begins at 1)
+            K_Anchor1(i,:)=[K_Anchor1(i-1,2)+(RAND(i,1)*DOIv) Grades];
+        end
+        if i~=360
+            Grades=0;
+            K_Anchor1(i,:)=[1 Grades]; %Ki=1, i=1 (truly this value belongs to i=0)
+            Grades=Grades+1;
+        end
+    else
+        K_Anchor1(i,:)=[K_Anchor1(i-1,1)+(RAND(i,1)*DOIv) Grades]; %Ki, for i~=1
+        Grades=Grades+1;
+    end
+end
+
+for i=1:(1*360)
+    if i==1 | mod(i,360)==1
+        if i==360 %This belongs truly to i=359 (since i begins at 1)
+            K_Anchor2(i,:)=[K_Anchor2(i-1,2)+(RAND(i,1)*DOIv) Grades];
+        end
+        if i~=360
+            Grades=0;
+            K_Anchor2(i,:)=[1 Grades]; %Ki=1, i=1 (truly this value belongs to i=0)
+            Grades=Grades+1;
+        end
+    else
+        K_Anchor2(i,:)=[K_Anchor2(i-1,1)+(RAND(i,1)*DOIv) Grades]; %Ki, for i~=1
+        Grades=Grades+1;
+    end
+end
+for i=1:(1*360)
+    if i==1 | mod(i,360)==1
+        if i==360 %This belongs truly to i=359 (since i begins at 1)
+            K_Anchor3(i,:)=[K_Anchor3(i-1,2)+(RAND(i,1)*DOIv) Grades];
+        end
+        if i~=360
+            Grades=0;
+            K_Anchor3(i,:)=[1 Grades]; %Ki=1, i=1 (truly this value belongs to i=0)
+            Grades=Grades+1;
+        end
+    else
+        K_Anchor3(i,:)=[K_Anchor3(i-1,1)+(RAND(i,1)*DOIv) Grades]; %Ki, for i~=1
+        Grades=Grades+1;
+    end
+end
+
+%Q is the number of Quadrant. Here we compute the value of m's for each
+%anchor of the triangle and the Gridpoint in consideration
+%1st Q [+ +] then nothing
+%2nd Q [- +] then 180-(abs(res))
+%3rd Q [- -] then 180 + res
+%4th Q [+ -] then 360-(abs(res))
+
+%Convert first vectors to complex number in order to be able to compute
+%angles directly
+[Hsizex Hsizey]=size(Gridpoints);
+CombinationTrianglesA=repmat(CombinationTriangles(1,1),Hsizex,1);
+CombinationTrianglesB=repmat(CombinationTriangles(1,2),Hsizex,1);
+CombinationTrianglesC=repmat(CombinationTriangles(1,3),Hsizex,1);
+CombinationTrianglesc1=complex(X(CombinationTrianglesA,1),X(CombinationTrianglesA,2));
+CombinationTrianglesc2=complex(X(CombinationTrianglesB,1),X(CombinationTrianglesB,2));
+CombinationTrianglesc3=complex(X(CombinationTrianglesC,1),X(CombinationTrianglesC,2));
+Gridpointsc=complex(Gridpoints(:,1),Gridpoints(:,2));
+%Resultant vectors / gridpoints and combinationtriangles in complex
+Vector_Anchor1_Gridpoints=Gridpointsc-CombinationTrianglesc1;
+Vector_Anchor2_Gridpoints=Gridpointsc-CombinationTrianglesc2;
+Vector_Anchor3_Gridpoints=Gridpointsc-CombinationTrianglesc3;
+%Obtain real and imaginary parts for each combination of anchor and
+%Gridpoints
+RE1=real(Vector_Anchor1_Gridpoints);
+IM1=imag(Vector_Anchor1_Gridpoints);
+RE2=real(Vector_Anchor2_Gridpoints);
+IM2=imag(Vector_Anchor2_Gridpoints);
+RE3=real(Vector_Anchor3_Gridpoints);
+IM3=imag(Vector_Anchor3_Gridpoints);
+%Search for vector according to the Quadrant so they are going to be useful
+%for computing the angle from 0 to 359 degrees
+Match1Q_Anchor1=find(RE1 > 0 & IM1 > 0);
+Match2Q_Anchor1=find(RE1 < 0 & IM1 > 0);
+Match3Q_Anchor1=find(RE1 < 0 & IM1 < 0);
+Match4Q_Anchor1=find(RE1 > 0 & IM1 < 0);
+
+Match1Q_Anchor2=find(RE2 > 0 & IM2 > 0);
+Match2Q_Anchor2=find(RE2 < 0 & IM2 > 0);
+Match3Q_Anchor2=find(RE2 < 0 & IM2 < 0);
+Match4Q_Anchor2=find(RE2 > 0 & IM2 < 0);
+
+Match1Q_Anchor3=find(RE3 > 0 & IM3 > 0);
+Match2Q_Anchor3=find(RE3 < 0 & IM3 > 0);
+Match3Q_Anchor3=find(RE3 < 0 & IM3 < 0);
+Match4Q_Anchor3=find(RE3 > 0 & IM3 < 0);
+%Compute distances between each anchor and the gridpoints
+Dist_Anchor1_Gridpoints=abs(Vector_Anchor1_Gridpoints);
+Dist_Anchor2_Gridpoints=abs(Vector_Anchor2_Gridpoints);
+Dist_Anchor3_Gridpoints=abs(Vector_Anchor3_Gridpoints);
+%-> CHECADO HASTA AQUI
+%Compute angles according to the Quadrant, the sum or differences with 360
+%, 180 and abs depends on how angledim works the angle.. tests with
+%different angledim(angle(value of angle in quad),'radians','degrees')
+
+%1Q->ANCH1
+Angle_Anchor1_1Q=angledim(angle(Vector_Anchor1_Gridpoints(Match1Q_Anchor1)),'radians','degrees');
+%Format of TPAnchor1=[Gridpoints, Distance between anchor1 and gridpoints, Angle between anchor1 and gridpoints]
+TPAnchor1(Match1Q_Anchor1,:)=[Gridpoints(Match1Q_Anchor1,:) Dist_Anchor1_Gridpoints(Match1Q_Anchor1) Angle_Anchor1_1Q];
+%2Q
+Angle_Anchor1_2Q=abs(angledim(angle(Vector_Anchor1_Gridpoints(Match2Q_Anchor1)),'radians','degrees'));
+TPAnchor1(Match2Q_Anchor1,:)=[Gridpoints(Match2Q_Anchor1,:) Dist_Anchor1_Gridpoints(Match2Q_Anchor1) Angle_Anchor1_2Q];
+%3Q
+Angle_Anchor1_3Q=360+angledim(angle(Vector_Anchor1_Gridpoints(Match3Q_Anchor1)),'radians','degrees');
+TPAnchor1(Match3Q_Anchor1,:)=[Gridpoints(Match3Q_Anchor1,:) Dist_Anchor1_Gridpoints(Match3Q_Anchor1) Angle_Anchor1_3Q];
+%4Q
+Angle_Anchor1_4Q=360-abs(angledim(angle(Vector_Anchor1_Gridpoints(Match4Q_Anchor1)),'radians','degrees'));
+TPAnchor1(Match4Q_Anchor1,:)=[Gridpoints(Match4Q_Anchor1,:) Dist_Anchor1_Gridpoints(Match4Q_Anchor1) Angle_Anchor1_4Q];
+
+%1Q->ANCH2
+Angle_Anchor2_1Q=angledim(angle(Vector_Anchor2_Gridpoints(Match1Q_Anchor2)),'radians','degrees');
+TPAnchor2(Match1Q_Anchor2,:)=[Gridpoints(Match1Q_Anchor2,:) Dist_Anchor2_Gridpoints(Match1Q_Anchor2) Angle_Anchor2_1Q];
+%2Q
+Angle_Anchor2_2Q=abs(angledim(angle(Vector_Anchor2_Gridpoints(Match2Q_Anchor2)),'radians','degrees'));
+TPAnchor2(Match2Q_Anchor2,:)=[Gridpoints(Match2Q_Anchor2,:) Dist_Anchor2_Gridpoints(Match2Q_Anchor2) Angle_Anchor2_2Q];
+%3Q
+Angle_Anchor2_3Q=360+angledim(angle(Vector_Anchor2_Gridpoints(Match3Q_Anchor2)),'radians','degrees');
+TPAnchor2(Match3Q_Anchor2,:)=[Gridpoints(Match3Q_Anchor2,:) Dist_Anchor2_Gridpoints(Match3Q_Anchor2) Angle_Anchor2_3Q];
+%4Q
+Angle_Anchor2_4Q=360-abs(angledim(angle(Vector_Anchor2_Gridpoints(Match4Q_Anchor2)),'radians','degrees'));
+TPAnchor2(Match4Q_Anchor2,:)=[Gridpoints(Match4Q_Anchor2,:) Dist_Anchor2_Gridpoints(Match4Q_Anchor2) Angle_Anchor2_4Q];
+
+%1Q->ANCH3
+Angle_Anchor3_1Q=angledim(angle(Vector_Anchor3_Gridpoints(Match1Q_Anchor3)),'radians','degrees');
+TPAnchor3(Match1Q_Anchor3,:)=[Gridpoints(Match1Q_Anchor3,:) Dist_Anchor3_Gridpoints(Match1Q_Anchor3) Angle_Anchor3_1Q];
+%2Q
+Angle_Anchor3_2Q=abs(angledim(angle(Vector_Anchor3_Gridpoints(Match2Q_Anchor3)),'radians','degrees'));
+TPAnchor3(Match2Q_Anchor3,:)=[Gridpoints(Match2Q_Anchor3,:) Dist_Anchor3_Gridpoints(Match2Q_Anchor3) Angle_Anchor3_2Q];
+%3Q
+Angle_Anchor3_3Q=360+angledim(angle(Vector_Anchor3_Gridpoints(Match3Q_Anchor3)),'radians','degrees');
+TPAnchor3(Match3Q_Anchor3,:)=[Gridpoints(Match3Q_Anchor3,:) Dist_Anchor3_Gridpoints(Match3Q_Anchor3) Angle_Anchor3_3Q];
+%4Q
+Angle_Anchor3_4Q=360-abs(angledim(angle(Vector_Anchor3_Gridpoints(Match4Q_Anchor3)),'radians','degrees'));
+TPAnchor3(Match4Q_Anchor3,:)=[Gridpoints(Match4Q_Anchor3,:) Dist_Anchor3_Gridpoints(Match4Q_Anchor3) Angle_Anchor3_4Q];
+
+
+%Parameters of the medium
+%Reference distance
+do=0.1; %[m]
+%Reference power at do
+P0=-37.466; %[dBm]
+%Propagation exponent
+np=2.3;
+
+%-> CHECADO HASTA AQUI
+[TPAnchor1sizex y]=size(TPAnchor1);
+for i=1:TPAnchor1sizex
+    %We search in the matrix of K (angles) the specified angle for
+    %TPAnchor1
+    Angletosearch=round(TPAnchor1(i,4));
+    %In order to avoid conflicts in searching for values in K
+    if Angletosearch==360
+        Angletosearch=0;
+    end
+    Match=find(K_Anchor1(:,2)==Angletosearch);
+    %TPAnchor1 is the distance(Match,3) is the distance,
+    %we have to check the size of P0
+    [x y]=size(Match);
+    P01=repmat(P0,x,1);
+    if (TPAnchor1(i,3) < do)
+        P_total=P01;
+    else
+        P_total=P01-(10*np*log10(TPAnchor1(i,3)./do)*K_Anchor1(Match,1));
+    end
+    %TPAnchor col3 is the Distance, TPAnchor cols1-2 are the grid point
+    RSSAnchor1_Gridpoints(i,:)=[TPAnchor1(i,1:2) P_total];
+end
+
+[TPAnchor2sizex y]=size(TPAnchor2);
+for i=1:TPAnchor2sizex
+    %We search in the matrix of K (angles) the specified angle for
+    %TPAnchor2
+    Angletosearch=round(TPAnchor2(i,4));
+    %In order to avoid conflicts in searching for values in K
+    if Angletosearch==360
+        Angletosearch=0;
+    end
+    Match=find(K_Anchor2(:,2)==Angletosearch);
+    [x y]=size(Match);
+    P02=repmat(P0,x,1);
+    if (TPAnchor2(i,3) < do)
+        P_total=P02;
+    else
+        P_total=P02-(10*np*log10(TPAnchor2(i,3)./do)*K_Anchor2(Match,1));
+    end
+    RSSAnchor2_Gridpoints(i,:)=[TPAnchor2(i,1:2) P_total];
+  
+end
+
+[TPAnchor3sizex y]=size(TPAnchor3);
+for i=1:TPAnchor3sizex
+    %We search in the matrix of K (angles) the specified angle for
+    %TPAnchor3
+    Angletosearch=round(TPAnchor3(i,4));
+    %In order to avoid conflicts in searching for values in K
+    if Angletosearch==360
+        Angletosearch=0;
+    end
+    Match=find(K_Anchor3(:,2)==Angletosearch);
+    [x y]=size(Match);
+    P03=repmat(P0,x,1);
+    if (TPAnchor3(i,3) < do)
+        P_total=P03;
+    else
+        P_total=P03-(10*np*log10(TPAnchor3(i,3)./do)*K_Anchor3(Match,1));
+    end
+    RSSAnchor3_Gridpoints(i,:)=[TPAnchor3(i,1:2) P_total];
+end
+
+%Output matrix RSS_inorout
+%RSS_inorout=[TriangleABC H(i,:) RSSxA RSSxB RSSxC Dist(Anchor,
+%point in grid)]
+[RSSAsize y]=size(RSSAnchor1_Gridpoints);
+[RSSBsize y]=size(RSSAnchor2_Gridpoints);
+[RSSCsize y]=size(RSSAnchor3_Gridpoints);
+ANCHOR1=repmat(CombinationTriangles(1,1),RSSAsize,1);
+ANCHOR2=repmat(CombinationTriangles(1,2),RSSBsize,1);
+ANCHOR3=repmat(CombinationTriangles(1,3),RSSCsize,1);
+%Format of output RSS_inoroutA=RSS_inoroutA[Anchor1 Anchor2 Anchor3 Gridpoint PowerfromAnchor1_Gridpoint PowerfromAnchor2_Gridpoint PowerfromAnchor3_Gridpoint]
+%All gridpointforAnchors are the same why?. if
+%RSSAnchor1_Gridpoints=RSSAnchor2_Gridpoints=RSSAnchor3_Gridpoints then we
+%use only RSSAnchor1_Gridpoints and we invoke the column that do not call
+%the gridpoints for RSSAnchor2_Gridpoints and RSSAnchor3_Gridpoints
+RSS_inorout=[ANCHOR1 ANCHOR2 ANCHOR3 RSSAnchor1_Gridpoints RSSAnchor2_Gridpoints(:,3) RSSAnchor3_Gridpoints(:,3)];
+
+
+

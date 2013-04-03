@@ -1,0 +1,369 @@
+#!/usr/bin/perl -I/opt/sharcnet/sq/lib
+# sqrun - run or submit a job.
+# written by Mark Hahn, SHARCnet, 2003-2007
+
+use strict;
+use User::pwent;
+use Getopt::Long qw(:config no_ignore_case bundling require_order);
+use Pod::Usage;
+use Sys::Syslog;
+use IPC::Open3;
+
+=head1 NAME
+
+sqrun, sqsub - run or submit a job
+
+=head1 SYNOPSIS
+
+sqrun [--bg] [-o ofile] [-e efile] [-i ifile] [-t or --test]
+    [-m|--mail=mailaddress] [--nodes=nodespec]
+    [-f flag] [-q queue] [-n ncpus] [-N nnodes] your_command ...
+
+=head1 DESCRIPTION
+
+B<sqrun> and B<sqsub> will submit jobs to the SHARCnet Queue system.
+The only difference between the two is whether control is returned 
+immediately (B<sqsub>), or waits until the job runs and completes (B<sqrun>).
+
+Normally, B<sqrun> should only be used for testing; on some systems,
+it is interpreted as "interactive" and may be rejected.
+
+=head1 OPTIONS
+
+ --bg		submit the job to run in batch mode (background)
+
+ -q queue	queue name (serial, threaded, mpi; default serial)
+
+ -n ncpus	require n cpus (default 1)
+ -N nnodes	require n nodes (no default)
+ --nodes=clu[1-4]
+		require a specific set of nodes
+
+ -i ifile	job reads inputs from 'ifile' (no default)
+ -o ofile	job output goes to 'ofile' (default: terminal unless batch)
+ -e efile	job errors go to 'efile' (default: same as -o)
+ -u ufile	job usage summary goes to 'ufile' (default: same as -o)
+
+ -m		send email when job completes (otherwise, no email)
+ --mail=user@domain
+		specify a mail destination other than your registered one.
+
+ --test		'test' mode: short but immediate
+ --nompirun	don't automatically do the mpirun
+ --global	submit to the global queue
+ --mpiextra	offer additional flags to mpirun
+
+ -w or --waitfor
+		wait for one or more other jobs to complete.
+
+ -f flag	specify certain flags to modify behavior.  flags include:
+		mpi, interactive, test, mail
+
+ -h or --help        show usage
+ --man               show man page
+
+=head1 NOTES
+
+your_command needs to be an actual executable, whether given explicitly
+(like "./a.out") or found on your PATH variable.
+
+any switches or arguments appearing after your_command are not interpreted
+by SQ, and are simply passed to your_command.  In other words, all B<sqsub>
+and its switches are strictly a prefix to your command.
+
+Please use B<-i>, B<-o>, B<-e> switches to direct file reads and writes
+to files.  This is far more efficient, and actually more robust, since 
+otherwise, the IO has to go from the compute node back to the login node.  
+
+There are three standard SHARCNET queues:
+	serial: one processor.
+	threaded: one node, multiple processors, as with OpenMP or pthreads.
+	mpi: any number of processors/nodes using MPI
+
+These are really types or categories of jobs.  any of these kinds of jobs
+can also be run in "test mode", which is purely for testing, and is 
+restricted in how long the job can run.  there may also be some cluster-
+specific queues (such as 'gaussian' for people who buy into the 
+SHARCNET Gaussian license, which runs only on machines at UWO.)
+
+flags:
+	mpi
+	nompirun
+	global
+	arch=x86_64
+	mail    
+
+=head1 SEE ALSO
+
+L<sqjobs>, L<sqkill>, L<sqsuspend>, L<sqresume>
+
+=cut
+
+my $verbose = 0;
+my $debug = 0;
+my $ifile;
+my $ofile;
+my $efile;
+my $ufile;
+my $ncpus = 1;
+my $nnodes;
+my $runtime;
+my @waitfor;
+
+my @mpirun_extra;
+my $queue;
+my %flags;
+my $is_xc = (-x '/opt/hptc/bin/srun');
+my $cluster = $ENV{CLUSTER};
+my $nodelist;
+my $extra_special;
+
+my %queues;
+open(Q,'bqueues|');
+while (<Q>) {
+    if (/^(\w+)\s+\d+/) {
+	$queues{$1}++;
+    }
+}
+close(Q);
+
+$flags{interactive}++ if ($0 =~ /sqrun/);
+
+sub set_flag {
+    my $f = shift;
+    $flags{$f}++;
+    if ($queues{$f} && $f ne 'mpi') {
+	$queue = $f;
+	print "queue $f\n" if ($debug);
+    }
+}
+
+GetOptions('i=s' => \$ifile,
+	   'o=s' => \$ofile,
+	   'e=s' => \$efile,
+	   'u=s' => \$ufile,
+
+	   'n|ncpus=i' => \$ncpus,
+	   'N|nnodes=i' => \$nnodes,
+           'q|queue=s' => sub { set_flag($_[1]); },
+           'f|flag=s' => sub { set_flag($_[1]); },
+           't|test' => sub { set_flag('test'); },
+#           'm' => sub { set_flag('mail'); },
+           'm' => sub { $flags{mail} = ""; },
+           'mail=s' => sub { $flags{mail} = $_[1]; },
+#           'm|mail' => sub { set_flag('mail'); },
+           'g|global' => sub { set_flag('global'); },
+           'r|runtime=f' => \$runtime,
+
+           'nompirun' => sub { set_flag('nompirun'); },
+           'bg|background' => sub { delete $flags{interactive}; },
+           'nodes=s' => \$nodelist,
+           'mpiextra=s' => sub { push(@mpirun_extra,$_[1]); },
+           'X' => \$extra_special,
+           'w|waitfor=s' => sub { push(@waitfor,$_[1]); },
+
+           'man' => sub { pod2usage(-exitstatus => 0, -verbose => 2); },
+           'h|help|?' => sub { pod2usage(1) },
+           'v|verbose' => \$verbose,
+           'd|debug' => \$debug,
+           ) || pod2usage(2);
+
+$verbose++ if ($debug);
+
+print "mail($flags{mail})\n";
+#$flags{mail} = "" if ($flags{mail} == 1);
+#print "mail($flags{mail})\n";
+
+my $command = join(' ',@ARGV);
+pod2usage(1) if (length($command) == 0);
+
+# do a bit of shuffling here: -test means "run as a test job";
+# the -q serial|threaded|mpi is an assertion of job type.
+# other -q settings need to be passed through unmolested
+
+$queue = 'mpi' if ($flags{mpi} && !defined $queue);
+$queue = 'serial' if (!defined $queue);
+$queue = 'test' if ($flags{test});
+
+oops("a serial job cannot run with multiple CPUs.")
+    if ($queue eq 'serial' && $ncpus > 1);
+oops("a threaded job cannot run with multiple nodes.")
+    if ($queue eq 'threaded' && $nnodes > 1);
+oops("a serial job cannot run across multiple nodes.")
+    if ($ncpus == 1 && $nnodes > 1);
+oops("the input file($ifile) is not readable: $!")
+    if (defined $ifile && !-r $ifile);
+
+whinge("MPI jobs are normally run with multiple CPUs.")
+    if ($ncpus == 1 && $flags{mpi});
+whinge("nodespec not supported except on xc") 
+    if (defined $nodelist && !$is_xc);
+whinge("extra special debug options only for XC") 
+    if (defined $extra_special && !$is_xc);
+
+if (defined $runtime) {
+    my $total_minutes = $runtime * 60;
+    my $h = int($total_minutes / 60);
+    my $m = $total_minutes % 60;
+    print "THANK YOU for providing a runtime estimate of $h hours, $m minutes!\n";
+    $runtime = "$h:$m";
+} else {
+#    whinge("please provide a runtime estimate (in hours) with -r.");
+}
+
+if (defined $extra_special) {
+    push(@mpirun_extra,'-prot');
+    push(@mpirun_extra,'-e','MPI_USE_LIBELAN=0');
+    push(@mpirun_extra,'-e','MPI_FLAGS=U');
+    push(@mpirun_extra,'-e','MPI_NOMALLOC_LIB=1');
+}
+
+# handle GW, where the mpi queue comes and goes.
+if ($queue eq 'mpi' && $cluster eq 'greatwhite') {
+    my $foo = `bqueues`;
+    $queue = 'parallel' if ($foo !~ /^mpi/m &&
+			    $foo =~ /^parallel/m)
+}
+
+$ncpus = 1 if ($flags{serial});
+$nnodes = 1 if ($flags{threaded});
+
+# do a bit of shuffling here: -test means "run as a test job";
+# the -q serial|threaded|mpi is an assertion of job type.
+
+if ($verbose) {
+    print "command($0)\n";
+    print "queue($queue) flags: ".join(',',keys %flags),"\n";
+    print "ncpus($ncpus) nnodes($nnodes) runtime($runtime)\n";
+    print "ifile($ifile) ofile($ofile) efile($efile)\n";
+    print "mpirun_extra: ",join(' ',@mpirun_extra),"\n" if (@mpirun_extra);
+}
+
+$ENV{PATH}='/opt/hptc/bin:'.$ENV{PATH};
+
+# bsub -q mpi -o outfile -I -n 32 /opt/hpmpi/bin/mpirun -srun ./m
+# bsub -q threaded -I -n 4 -ext "SLURM[nodes=1]" ./o
+# if -I or -o, then -N means "send email on completion"; otherwise no mail
+
+# bsub -q mpi -n 32 /opt/hpmpi/bin/mpirun -srun -o $ofile ./m
+
+my $nodespec;
+if ($is_xc) {
+    my @n;
+    push(@n,"nodes=$nnodes") if (defined $nnodes);
+    push(@n,"nodelist=$nodelist") if (defined $nodelist);
+    $nodespec = join(';',@n) if (@n);
+}
+
+my @parts;
+push(@parts,'bsub');
+push(@parts,'-I') if ($flags{interactive});
+push(@parts,'-n',$ncpus) if (defined $ncpus);
+push(@parts,'-q',$queue);
+if (defined $flags{mail}) {
+    whinge("mail flag handling: ",$flags{mail});
+    push(@parts,'-N') if (defined $ofile || $flags{interactive});
+    push(@parts,'-u',$flags{mail}) if (length($flags{mail}));
+}
+
+push(@parts,'-o',$ofile) if (defined $ofile);
+push(@parts,'-e',$ofile) if (defined $efile);
+push(@parts,'-i',$ifile) if (defined $ifile && !$is_xc);
+
+push(@parts,'-ext',"SLURM[$nodespec]") if (defined $nodespec && $is_xc);
+
+if (@waitfor) {
+    my %j = map {$_ => 1} split(/,/,join(',',@waitfor));
+    my @j = sort {$a<=>$b} keys %j;
+    push(@parts,'-w',join('&&',map {"ended\($_\)"} @j));
+}
+#push(@parts,'-w',$waitfor) if (defined $waitfor);
+
+if ($flags{mpi} && !$flags{nompirun}) {
+    if ($is_xc) {
+	push(@parts,'/opt/hpmpi/bin/mpirun',@mpirun_extra,'-srun');
+    } elsif ($cluster eq 'greatwhite') {
+	push(@parts,'prun');
+    } elsif ($cluster eq 'silky') {
+	push(@parts,'mpirun','-np',$ncpus,'dplace','-s1');
+    }
+}
+
+# o and e taken care of above (via lsf) for xc
+push(@parts,'-i',$ifile) if (defined $ifile && $is_xc);
+
+# this gets propogated to the user process.  should it be set
+# only for threaded jobs?
+$ENV{OMP_NUM_THREADS} = $ncpus;
+
+# validate the command provided by the user - that it's an executable.
+my $exeOK = 0;
+my $exe = $ARGV[0];
+if (-e $exe) {
+    $exeOK = 1;
+#    $ARGV[0] = $cwd . '/' . $ARGV[0] if ($ARGV[0] !~ /^\.?\//);
+} else {
+    # track down the command
+    for my $dir (split(':', $ENV{'PATH'})) {
+	my $e = $dir . '/' . $exe;
+	if (-e $e) {	
+	    $exeOK = 1;
+	    $exe = $e;
+	}
+    }
+}
+
+oops("executable '$exe' seems to lack exe permissions") if (!$exeOK);
+
+if ($flags{mpi} && !$flags{nompirun}) {
+    my $libs = `ldd $exe`;
+    whinge("executable '$exe' does not appear to be an MPI application")
+        if ($libs !~ /lib(mpi|myriexpress)/);
+    # XC and silky show libmpi; wobbe (perhaps mako,guper) libmyriexpress
+}
+
+# complain about wrong arch?
+
+push(@parts,@ARGV);
+
+my $line = join('|',@parts);
+print "about to execute: ",$line,"\n" if ($verbose);
+exit 0 if ($debug);
+
+#exec(@parts) || die("exec($line) failed: $!");
+
+my($wtr, $rdr, $err);
+my $pid = open3('<&STDIN', $rdr, $err, @parts);
+
+# bad to leave $err unread from?
+
+while (<$rdr>) { 
+    if (my ($jobid,$queue) = /^Job <(\d+)> is submitted to queue <(\w+)>.$/) {
+	print STDERR "submitted as jobid=$jobid\n";
+	next;
+    } elsif (/^<<Starting on/) {
+	print STDERR "job starting...\n";
+	next;
+    } elsif (/^<<Waiting for dispatch/) {
+	next;
+    }
+    print;
+}
+wait();
+# collect exit status here?
+exit 0;
+
+sub bomb {
+  my $message = shift;
+  print STDERR "$message\n";
+  exit 1;
+}
+sub oops {
+    my $message = shift;
+    print STDERR "error: $message\n";
+    exit 1;
+}
+sub whinge {
+    my $message = shift;
+    print STDERR "warning: $message\n";
+}

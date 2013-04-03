@@ -1,0 +1,53 @@
+Analicemos nodo 25 isolemnos
+1. Cuales son sus neighbors?
+2. 14,15,30,38 anchors?
+
+Audibleanchors: 
+25    14
+25    15
+25    30
+
+38? parece que esta demasiado lejos para ser considerado > Threshold
+3. Triangulos que se forman, en cual si deberia quedar afuera y en cual
+si deberia quedar adentro
+4. Sin embargo todos los test pasa en que deberia quedar adentro en todos los triangulos
+
+Neighborhood:
+25    13
+25    14
+25    15
+25    23
+25    24
+25    26
+25    27
+25    28
+25    29
+25    30
+25    40
+25    41
+25    43
+
+Considerando nodo 43 (que aparenta estar mas lejos que nodo 25)
+Pij(14,25)=-41.1484 > Pij(14,43)=-50.4969
+Pij(30,25)=-52.1911 < Pij(30,43)=-50.5921
+Pij(15,25)=-42.4588 > Pij(15,43)=-53.9588
+
+Entonces con nodo 43 no es suficiente juzgar de que el nodo este adentro/afuera del
+triangulo.. aunque al final considera que esta adentro
+
+Target Node: 5
+
+Neighborhood:
+
+  5     1
+  5     2
+  5     3
+  5     4
+  5     6
+  5     7
+
+Audibleanchors:
+5     1
+5     4
+5     7
+

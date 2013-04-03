@@ -1,0 +1,1 @@
+echo  "$1" | /opt/sharcnet/octave/2.9.13/octave COGtotal_estimation_parallel.m 

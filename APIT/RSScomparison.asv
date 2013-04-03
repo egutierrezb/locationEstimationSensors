@@ -1,0 +1,157 @@
+function [TableNodesInside TableNodesOutside InOut_testinside InOut_testoutside InOut_test InOut_realinside InOut_realoutside InOut_real Matches NoMatches Nodeswecanestimate]=RSScomparison(X,Indices,Audibleanchors,Neighborhood, Pij)
+% It makes several comparisons between the RSS of a target node and each of the anchors
+% If it finds that the RSSxtargetnode<RSSxy (where x and y are anchors)
+% then targetnode is outside of the triangle defined for anchors [x, y, z]
+% The assumption is that RSS decays monotonically with the distance
+% Array InOut_test=[TargetNode Anchor1 Anchor2 Anchor3 InOut] 
+% InOut=0 (Outside of a triangle)
+% InOut=1 (Inside of a triangle)
+
+global M N 
+[m n]=size(Audibleanchors);
+Anchorstriangle=zeros(1,3);
+CombinationTriangles=[];
+%Counters
+Anchorscounter=0;
+temp=1;
+count=1;
+count2=1;
+count3=1;
+count4=1;
+count5=1;
+aux=1;
+Acombinationinside=0;
+
+Matches=0;
+NoMatches=0;
+
+%X2 is going to have the same columns as X plus a third column of zeros in
+%order to be feasible the cross.
+X2=X;
+[r s]=size(X);
+X2(:,3)=zeros(r,1);
+
+
+for i=1:(M+N) %M+N
+    %Check out progress of the simulation w/ the number of Target node
+    %Only consider target nodes, not anchors  (if 1= mean that it is not an
+    %anchor node, it is a target node), and it should check that the target
+    %node is a node considered in the Neighborhood, in order to avoid
+    %problems with bounds of Index
+    if (isempty(find(Indices==i))==1)  & (isempty(find(Neighborhood(:,1)==i))==0) 
+        fprintf(1,'--Making RSS comparisons for Target Node %d\n',i);
+        for j=1:m        
+            if i==Audibleanchors(j,1) %Format of audibleanchors: audibleanchors(targetnode,anchor) we want the first column
+                Anchorscounter=Anchorscounter+1;
+                Anchorstriangle(temp)=Audibleanchors(j,2); %We want the anchor
+                temp=temp+1;
+            end
+        end
+        %To fix the size of the anchorstriangle array and prevent bugs
+        limit_anchors=temp-1;
+        temp=1;
+        if Anchorscounter>=3
+            %If number of anchors>=3 then we should form a triangle between the
+            %anchors
+            CombinationTriangles=[];
+            CombinationTriangles=nchoosek(Anchorstriangle(1:limit_anchors),3); %Combinations=nchoosek(n,k)
+            [u v]=size(CombinationTriangles);
+            for SetofAnchors=1:u %size of CombinationTriangles
+                %Draw triangle among the anchors
+            %    line([X(CombinationTriangles(SetofAnchors,1),1) X(CombinationTriangles(SetofAnchors,2),1)],[X(CombinationTriangles(SetofAnchors,1),2) X(CombinationTriangles(SetofAnchors,2),2)],'Color','b','LineStyle','-');
+            %    line([X(CombinationTriangles(SetofAnchors,2),1) X(CombinationTriangles(SetofAnchors,3),1)],[X(CombinationTriangles(SetofAnchors,2),2) X(CombinationTriangles(SetofAnchors,3),2)],'Color','b','LineStyle','-');
+            %    line([X(CombinationTriangles(SetofAnchors,3),1) X(CombinationTriangles(SetofAnchors,1),1)],[X(CombinationTriangles(SetofAnchors,3),2) X(CombinationTriangles(SetofAnchors,1),2)],'Color','b','LineStyle','-');
+                %Is TargetNode inside or outside for the setofanchors?
+                Mt=cross(X2(i,:)-X2(CombinationTriangles(SetofAnchors,1),:),X2(CombinationTriangles(SetofAnchors,2),:)-X2(CombinationTriangles(SetofAnchors,1),:)); %H-A,B-A 
+                Nt=cross(X2(i,:)-X2(CombinationTriangles(SetofAnchors,2),:),X2(CombinationTriangles(SetofAnchors,3),:)-X2(CombinationTriangles(SetofAnchors,2),:)); % H-B,C-B
+                Ot=cross(X2(i,:)-X2(CombinationTriangles(SetofAnchors,3),:),X2(CombinationTriangles(SetofAnchors,1),:)-X2(CombinationTriangles(SetofAnchors,3),:)); % H-C,A-C
+                if ((Mt(1,3)>0)&(Nt(1,3)>0)&(Ot(1,3)>0)) | ((Mt(1,3)<0)&(Nt(1,3)<0)&(Ot(1,3)<0))
+                          % Means that target node is effectively inside of
+                          % the triangle
+                         InOut_real(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 1];
+                         InOut_realinside(count4,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)];
+                         count4=count4+1;
+                         
+                else
+                        %Means that target node is effectively outside of the
+                        %triangle
+                        InOut_real(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 0];
+                        InOut_realoutside(count5,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)];
+                        count5=count5+1;
+                end
+                %New theorem: if RSSxy>RSSxi then target node is outside of triangle.
+                %We have to check if the anchors are in the communication
+                %range, if all are in the communication range, then proceed
+                %with th
+                if Pij(CombinationTriangles(SetofAnchors,1),CombinationTriangles(SetofAnchors,2))>Pij(CombinationTriangles(SetofAnchors,1),i) | Pij(CombinationTriangles(SetofAnchors,1),CombinationTriangles(SetofAnchors,3))>Pij(CombinationTriangles(SetofAnchors,1),i)
+                    InOut_test(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 0];
+                    InOut_testoutside(count2,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)];             
+                    count2=count2+1;
+                elseif Pij(CombinationTriangles(SetofAnchors,2),CombinationTriangles(SetofAnchors,1))>Pij(CombinationTriangles(SetofAnchors,2),i) | Pij(CombinationTriangles(SetofAnchors,2),CombinationTriangles(SetofAnchors,3))>Pij(CombinationTriangles(SetofAnchors,2),i)
+                    InOut_test(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 0];
+                    InOut_testoutside(count2,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)];                
+                    count2=count2+1;
+                elseif Pij(CombinationTriangles(SetofAnchors,3),CombinationTriangles(SetofAnchors,1))>Pij(CombinationTriangles(SetofAnchors,3),i) | Pij(CombinationTriangles(SetofAnchors,3),CombinationTriangles(SetofAnchors,2))>Pij(CombinationTriangles(SetofAnchors,3),i)
+                    InOut_test(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 0];
+                    InOut_testoutside(count2,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)];               
+                    count2=count2+1;
+                else 
+                    %Means that node possibly is inside of the triangle
+                    InOut_test(count,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3) 1];
+                    InOut_testinside(count3,:)=[i CombinationTriangles(SetofAnchors,1) CombinationTriangles(SetofAnchors,2) CombinationTriangles(SetofAnchors,3)]; 
+                    count3=count3+1;
+                    Acombinationinside=1;
+                end
+                count=count+1;
+                         
+            end
+        end
+    end 
+    Anchorscounter=0;
+    if Acombinationinside==1
+        Nodeswecanestimate(aux,:)=i;
+        aux=aux+1;
+        Acombinationinside=0;
+    end
+end
+TableNodesInside= InOut_testinside;
+cont3=1;
+for i=1:(M+N)
+    if (isempty(find(Nodeswecanestimate==i))==1) % if (1) means that the node is not found in Nodeswecanestimate and therefore is part of the Nodeswecannotestimate
+        Nodeswecannotestimate(cont3,:)=i;
+        cont3=cont3+1;
+    end
+end
+if (isempty(Nodeswecannotestimate)==0) & (isempty(InOut_testoutside)==0) %if it exists the array of Nodeswecannotestimate
+    [m n]=size(InOut_testoutside);
+    [o p]=size(Nodeswecannotestimate);
+    for j=1:o
+        for i=1:m
+            if (isempty(find(Nodeswecannotestimate(j,1)==InOut_testoutside(i,1)))==0) %if it is found in Table  in the first column (which is the Target Node) we should eliminate it.
+                InOut_testoutside(i,:)=[0 0 0 0]; %Artifitial way to eliminate it
+            end
+        end
+    end
+    cont3=1;
+    for i=1:m
+        if InOut_testoutside(i,:)==[0 0 0 0]
+            doomy=1; %Just a doomy alg
+        else
+            TableNodesOutside(cont3,:)=InOut_testoutside(i,:);
+            cont3=cont3+1;
+        end
+    end
+else
+    TableNodesOutside=InOut_testoutside;
+end
+
+
+%-MATCHES BETWEEN MY_TEST AND REAL TEST
+[m n]=size(InOut_real);
+for i=1:m
+    if InOut_test(i,5)==InOut_real(i,5)
+        Matches=Matches+1;
+    else
+        NoMatches=NoMatches+1;
+    end
+end

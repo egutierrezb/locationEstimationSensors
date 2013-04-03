@@ -1,0 +1,79 @@
+Neighborhood
+  2     1
+  2     3
+  2     4
+  2     5
+  2     7
+  2    17
+  2    18
+  2    19
+  2    20
+  2    22
+
+CombinationTriangles (del nodo 2)
+  1     4     7
+  1     4    20
+  1     7    20
+  4     7    20
+
+MatrixRSSTargetNode =
+
+    1.0000  -48.6047 <- InitSubtable_MatrixRSSTargetNode
+    4.0000  -48.4623
+    7.0000  -50.5921 *a)______ Cuando entra al if i==Neighborhood(d,1) hasta aqui se ha llenado la tabla <- EndSubtable_MatrixRSSTargetNode
+--
+    1.0000  -48.6047
+    4.0000  -48.4623
+   20.0000  -49.9708
+--  
+    1.0000  -48.6047
+    7.0000  -50.5921
+    20.0000  -49.9708
+
+MatrixRSSNeighborhood =
+--Neighbor: 1
+    1.0000       Inf  <- InitSubtable_MatrixRSSNeighborhood
+    4.0000  -53.5697
+    7.0000  -49.8634 *Comparar con a) <- EndSubtable_MatrixRSSNeighborhood
+--3
+    1.0000  -38.8021
+    4.0000  -51.0423
+    7.0000  -47.6828
+--4
+    1.0000  -53.5697
+    4.0000       Inf
+    7.0000  -48.3749
+--5
+    1.0000  -50.6673
+    4.0000  -40.3368
+    7.0000  -43.7986
+--7
+    1.0000  -49.8634
+    4.0000  -48.3749
+    7.0000       Inf
+--17
+    1.0000  -57.3481
+    4.0000  -54.4864
+    7.0000  -57.9485
+--18
+    1.0000  -56.3121
+    4.0000  -50.3017
+    7.0000  -55.7211
+--19
+    1.0000  -54.0820
+    4.0000  -47.0363
+    7.0000  -53.3900
+--20
+    1.0000  -56.0094
+    4.0000  -52.9516
+    7.0000  -56.7042
+--22    
+    1.0000  -56.1167
+    4.0000  -44.7336
+    7.0000  -53.6005 <-- se rompe el if
+______________________________________________________________________________
+Necesitamos saber si el nodo esta afuera o dentro del triangulo
+
+Necesitamos crear un arreglo que se llame InsiderorOutside
+Que elementos necesita tener el arreglo_
+InsideorOutside=[O/I TargetNode CombinationTriangles]  

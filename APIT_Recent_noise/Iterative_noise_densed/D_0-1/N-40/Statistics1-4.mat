@@ -1,0 +1,22 @@
+# Created by Octave 2.9.13, Sat Oct 13 12:38:32 2007 EDT <eagblanc@dol26>
+# name: Estimatedcoordinates
+# type: matrix
+# rows: 11
+# columns: 3
+ 67 2.3125 1.875
+ 77 3.25 3
+ 87 3.25 3
+ 91 2.5 9
+ 92 2 8.25
+ 100 2.75 8.5
+ 109 1.25 8.75
+ 112 2 9
+ 125 2 9
+ 127 1.5 9
+ 142 6 3.25
+# name: Error_total
+# type: scalar
+0.6960722428302563
+# name: size_EstimatedCoordinates_row
+# type: scalar
+11

@@ -1,0 +1,44 @@
+SHELL:
+
+NO NOISE:
+APIT_randomnonoise_parallel.m -> To compute GeneralTopology.m
+drawtriangles_parallel.m->To compute Tables Tinside and Toutside for target noders
+concatenateinout.m ->To concatenate Tables Tinside and Toutside to TINSIDE TOUTSIDE
+APITAggregation_parallel.m -> To compute Tables TargetGridMax for target nodes
+concatenateinout_APITAggregation.m -> To concatenate tables TargetGridmax to TARGETGRIDMAX
+COG_estimation_parallel.m -> To compute COG and RMSE
+
+NOISE (DOI+APIT TEST)
+APIT_randomnoise_parallel.m 
+drawtriangles_noiseparallel.m
+concatenateinout.m
+APITAggregation_noiseparallel.m
+concatenateinout_APITAggregation.m
+COG_estimation_noiseparallel.m
+
+
+APIT_random_noise_iterative_parallel ->To be modified to be run in parallel.
+
+
+(Each file can invoke its own functions)
+
+
+Files:
+
+/APIT_Recent_nonoise_repexp
+APIT_randomnonoise_repexp -> APIT_nonoise no iterative no multilateration
+APIT_randomnonoise_iterative -> APIT_nonoise iterative no multilateration
+*APIT_randomnonoise_iterativemult ->APIT_nonoise iterative multilateration
+
+/APIT_Recent_noise
+APIT_random_noise -> APIT_noise no iterative no multilateration
+APIT_random_noise_iterative -> APIT_noise iterative no multilateration
+*APIT_random_noise_iterativemult -> APIT_noise iterative multilateration
+APIT_random_noise_density -> APIT en el que se prueba un algoritmo similar a RADAR 
+
+*->To be created
+
+Files (in test or trash?)
+RSS_comparison_prueba (?) -> Compare RSS's anchors and target node
+multilateration or multilateration_modified -> which one to use?
+

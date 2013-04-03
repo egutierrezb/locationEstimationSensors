@@ -1,0 +1,30 @@
+%Lo mejor es obtener la info atraves de los anchors que tiene el target node
+en Anchorstriangle y compararlo con cada uno de los bloques de los neighbors
+%Lo mejor para programarlo es hacer 2 finds
+un find para el Neighborshared y neighbor
+el otro find para que en el rango dado del primero se busque el Anchortriangle en curso
+e.g. find(Neighborhood_shared(1:size(Neighbor),2)), si este esta vacio alzamos una bandera
+de que el anchortriangle no esta compartido, hacemos un break? y pasamos al otro anchortriangle
+Debugearlo con la lista de Neighborshared y Anchorstriangle que tenemos
+
+count=1;
+[an bn]=size(Anchorstriangle);
+
+for u=1:an 
+	Anchornotshared=0;
+	for i=1:(M+N)
+		Neighbor=[];
+		Anchorbusqueda=[];
+		Neighbor=find(Neighborhood_shared(:,1)==i)
+		[mn nn]=size(Neighbor);
+		Anchorbusqueda=find(Neighborhood_shared(:,2)==Anchorstriangle(u));
+		if(isempty(Anchorbusqueda)==1) %if it is empty
+			Anchornotshared=1;
+			break; %because the anchor is not shared, break the for and we can go with the next anchortriangle without supervising the remaining blocks of neighbors and anchors
+		end
+	end
+	if Anchornotshared==0 %means that the anchortriangle was found in all the blocks of the neighbor
+		Definiteanchors(count)=Anchorstriangle(u);
+		count=count+1;
+	end
+end

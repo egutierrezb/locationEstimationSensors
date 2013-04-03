@@ -1,0 +1,320 @@
+1. CHECAR AUDIBLE ANCHORS Y SACAR AH
+   CHECAR NEIGHBORHOOD Y SACAR ND
+   45 NODES
+   15 ANCHORS
+   30 BLINDFOLDED DEVICES
+   DOI=0
+   RANDOM (*.mat-USB o PC lab)
+   XLS (DONE)
+2. CHECAR AUDIBLE ANCHORS Y SACAR AH
+   CHECAR NEIGHBORHOOD Y SACAR ND
+   45 NODES
+   15 ANCHORS
+   30 BLINDFOLDED DEVICES
+   DOI=0
+   RANDOM (*.mat-USB o PC lab)
+   XLS (DONE)
+3. AH=10
+   ND=8.62
+   45 NODES
+   35 BLINDFOLDED DEVICES
+   10 ANCHOR NODES
+   ANR=10
+   DOI=0 (DISK UNIT)
+   RANDOM
+   XLS (DONE)
+4.x APIT_Aggregationfst1amod 
+   M=35 (bf)
+   N=10 (anc)
+   ANR=2
+   AH=4.65
+   ND=7.46
+   DIST NEIGHBORHOOD=2.8
+   XLS (DONE)
+5.x APIT_Aggregationfst2amod
+   M=35
+   N=10
+   AH=5.45
+   ND=7.77
+   DIST NEIGHBORHOOD=2.8
+   ANR=2
+   XLS (DONE)
+6.x APIT_Aggregationfst3amod
+   M=35
+   N=10
+   DIST NEIGHBORHOOD=2.8
+   AH=5.92
+   ND=8.22
+   ANR=2
+   XLS (DONE)
+7.x APIT_Aggregationfst3amod
+   M=45
+   N=20
+   AH=11.46
+   ND=13.04
+   DIST NEIGHBORHOOD=2.8
+   ANR=2
+   TO DO:XLS (WE MAY NOT USED IT) 
+8.x APIT_Aggregation_fsteverything
+   M=45
+   N=20
+   AH=11.46
+   ND=13.04
+   DIST NEIGHBORHOOD=2.8
+   TIME TO RUN: 3HRS
+   (SAME THAN THE BEFORE, BUT THIS ONE IS THE CORRECT)
+   XLS (DONE)
+9.x APIT_Aggregation_fsteverything+whichnodes can not be estimated
+   M=20
+   N=10
+   AH=9.6
+   ND=13
+   DIST NEIGHBHORHOOD=4.58
+   XLS (DONE)
+   Note: Files saved with the comment of being wnoest.
+%  RUN SIMULATIONS CONSIDERING DOI WITH FIXED RECEIVER SENSITIVITY AND ANR=1
+%  HAY UN BUG PORQUE PUEDEN APARECES DISTANCIAS ENTRE NODOS MENOS DE 1 M Y LA POTENCIA
+%  P0 DE REFERENCIA ESTA MEDIDA EN DO=1M, POR LO TANTO LAS POTENCIAS TIENEN QUE SER REFERIDAS
+%  A DISTANCIAS MAYORES DE 1M (EL MODELO LOGNORMAL ES VALIDO SOLO PARA DISTANCIAS MAYORES
+%  A LA DISTANCIA DE REFERECIA - EN ESTE CASO 1M)
+10. w/ noise
+    DOI=0.8
+    M=30
+    N=20
+    ANR=1
+    RSS_thr=-101
+    AH=2.43
+    ND=4.9
+    TO DO:XLS
+11.x (NO NOISE)
+    M=30
+    N=20
+    ANR=1
+    DIST NEIGHBORHOOD=4.58
+    AH=9.8
+    ND=23.2
+    XLS (DONE)
+12. M=68
+    N=12
+    ANR=6
+    GRID=[0 10]
+    Res=0.5
+    AH=12
+    ND=8.3
+    DIST_NEIGHBORHOOD=2
+    DOI=0
+    Error=0.6638 (normalized /R)
+    Error=1.6336
+__________________________________________
+RUNNING 2nd STAGES 
+
+13. x ESTIMATED NODES AND OLD ANCHORS AS ANCHORS
+    M=30
+    N=15
+    ANR=1
+    GRID=[0 10]
+    RES=0.5
+    DIST NEIGHBORHOOD=4.58
+    MAT FILE: M--30-N--15--ANR--1-2r--random--R-4-58
+    NOTE: NEW POSITIONS COULD BE COMPUTED
+
+14. x ESTIMATED NODES AS ANCHORS ONLY
+    M=30
+    N=15
+    ANR=1
+    GRID=[0 10]
+    RES=0.5
+    DIST NEIGHBORHOOD=4.58
+    NOTE: NO NEW POSITIONS COULD BE COMPUTED, NODESWECANESTIMATE DOES NOT EXIST. (I.E. NODES WITH NOT
+    ENOUGH AUDIBLE ANCHORS OR ALL THE NODES FALL OUTSIDE OF THE TRIANGLES).
+
+15. ESTIMATED NODES AND OLD ANCHORS AS ANCHORS
+    M=20
+    N=10
+    AH=9.6
+    ND=13
+    ANR=1
+    DIST NEIGHBHORHOOD=4.58
+    MAT FILE: M--20-N--10--ANR--1-2r--random--R-4-58
+    NOTE: NEW POSITIONS COULD BE COMPUTED: (ONLY 1)
+
+16. ESTIMATED NODES AS ANCHORS ONLY
+    M=20
+    N=10
+    AH=9.6
+    ND=13
+    ANR=1
+    DIST NEIGHBHORHOOD=4.58
+    NOTE: NO NEW POSITIONS COULD BE COMPUTED
+_______________________________________________________________________________________________________
+
+NEXT:
+ 
+1. SEE IF THE CODE IS PROVIDED OTHERWISE START TO PROGRAM IT (DOI) (PARTIALLY DONE, PRESENT IT BEFORE IMPLEMENT IT, AND DEFINITION)
+2. RUN FASTER THE ALGORITHM (APITAGGREGATION (PRIORITY) AND DRAWTRIANGLES MODULES) (DONE)
+3. MODIFY DRAWTRIANGLES_FST IN ORDER TO BE FASTER (NEIGHBORHOOD SEARCH) (DONE)
+4. RUN THE ALGORITHM, FOR EXAMPLE WITH FEW NODES (NODES WHICH ARE ESTIMATED AND NODE THAT ARE NOT ESTIMATED) (DONE)
+5. WE SHOULD CREATE A MODULE AFTER COG WHERE WE MAY DRAW NEW TRIANGLES FOR THE NODES (NOT DONE, STILL THINKING)
+6. RUN SIMULATIONS WITH NOISE AND DEBUG 
+7. COMPARE CASES WHEN THERE IS NO NOISE
+8. RUN THE FOLLOWING PARAMETERS IN THE CODE?
+
+%N=12
+%M(bf)=68 (Total=80, 12->15%)
+%ND=8.2 ~8 (paper)
+%Dist_Neighborhood=2 (ver para cual valor se obtiene ND=8) 2 m?
+%ANR=6
+%Res=0.2 (10% Dist_Neighborhood) for GRID
+%Grid -[ 0 10R]=[0 20]
+
+
+DONE
+1. APITAGGREGATION_FST2 IS THE ONE TO BE USED (IS FASTER THAN THE OTHERS)
+2. MODULES DRAWTRIANGLES_NOISE, EMPMODEL_DOI, CONNECTIVITY_DOI AND APIT_RANDOM DONE(DONE)
+3. WE HAVE OPTIMIZED DEPLOY_NODES_RANDOM (IN ORDER TO GENERATE EFFECTIVELY, A UNIFORM DISTRO)
+4. OPTIMIZE THE LOGMODEL IN EMPMODEL_DOI (THE VALUES ARE VALID ONLY FOR DISTANCES GREATER THAT 1 M) (? AGREGARLO EN EL DE NO RUIDO)
+5. MODIFICATION LINE 61 DRAWTRIANGLES_NOISE (WE CONSIDER ALSO NEIGHBORHOOD FOR I) (? AGREGARLO EN EL DE NO RUIDO->DONE)
+6. IN APITAGGREGATION NOISE WE ADDED RESTRICTIONS TO SUMA_TOTAL_D (LINE 354)
+SE TRASLAPAN POSITIVAS Y NEGATIVAS (SOBRAN POS Y NEG) SUMA TOTAL, POS_D, NEG_D
+SE TRASLAPAN POSITIVAS Y NEGATIUVAS (NO SOBRAN POS NI NEG) SUMA_TOTAL
+SE TRASLAPAN POSITIVAS Y NEGATIVAS (NO SOBRAN NEG, QUIERE DECIR QUE SE UTILIZARON TODAS LAS NEG)-> SOLO CONCATENAR
+SUMA_TOTAL Y POS_D
+SE TRASLAPAN POSITIVAS Y NEGATIVAS (NO SOBRAN POS, QUIERE DECIR QUE SE UTILIZARON TODAS LAS POS)-> SOLO CONCATENAR
+SUMA_TOTAL Y NEG_D
+NO HAY SUMA_TOTAL; TONS SE AGREGAN A SUMA_TOTAL_D POSITIVEAREAS Y NEGATIVEAREAS
+(? AGREGARLO EN EL DE NO RUIDO)
+7. DEFINITION OF GLOBAL VARIABLES M N Res y DOIv. Agregar esas global variables en cada una de las funciones
+(? AGREGARLO EN EL DE NO RUIDO->DONE)
+8. SE AGREGO UNA FUNCION CON LA QUE SE DIBUJA UNA LINEA ENTRE EL NODO CON LA POSICION REAL Y LA POSICION ESTIMADA.
+(? AGREGARLO EN EL DE NO RUIDO->DONE)
+9. APIT_RANDOM_NONOISE (CHANGE OF CONNECTIVITY_ANR, APIT_AGGREGATION_FST2, CREATE MATRIXDIST_AND_GRID AND COMPUTE BY SEPARATE THE TRUEDIST MATRIX AND GRID)
+10. CHANGE BUG IN CONNECTIVITY_ANR (WE SHOULD CONSIDER IN THE NEIGHBORHOOD FOR TARGET NODES, AND 
+NEIGHBORS ONLY TARGET NODES, NO ANCHORS) (VERIFICADO CON UNA CORRIDA)
+11. CONSIDER GRAPHS OF SCALABILITY AND RESOLUTION OF THE SCAN GRID?????? HOW THE AVG. LOCATION ERROR IMPROVES?
+12. RSS_COMPARISON FILE CREATED AND APIT_RSSCOMPARISON-> FILES TO TEST A NEW APIT ALGORITHM BASED IN RSS COMPARISONS
+IN ORDER TO MAKE A ROUGH PREDICTION IF A TARGET NODE FALLS INSIDE A TRIANGLE OR NOT
+13. WE CREATED THE FILE M--30-N--15_compare_APIT_mytest in order to compare RMSE of mytest and APIT algorithm
+(run with mytest=RSSComparison)
+mytest=error de 0.9872
+apit=error de 2.2364
+
+M--50--N-15
+mytest=1.2584
+apit=1,5578
+14.TO_ILLUSTRATE_MY TEST IS A M FILE IN ORDER TO TEST THE ACCURACY OF MY TEST IN RSS COMPARISONS IN A GRAPHICAL WAY.
+I EXTENDED THE ALGORITHM IN ORDER TO GET A SURFACE OF DENSITY OF RSS
+15. MODIFICATION OF APIT_RANDOM_NONOISE WITH A MODULE OF REFINEMENT, WHEN WE HAVE A XEST WE CAN COMPUTE IF IT IS INSIDE OR OUTSIDE OF THE TRIANGLES
+Y COMPUTE THE COG AGAIN.
+16. MODIFICATION OF ONE PARAMETER NODESWECANESTIMATE AS AN OUTPUT OF APIT_AGGREGATIONFST2
+17. OBTAINING OF RMSE_REF
+18 PLOTTING ESTIMATION_REF AND ANCHORS IN DIFFERENT PLOTS.
+19. BUG IN DRAWTRIANGLES_FST.. I CONSIDERED RUN APIT TESTS ON THE NEIGHBORHOOD THAT IT'S IN RANGE OF
+THE ANCHORS (DTAWTRIANGLES_FST_PRUEBA), I HAVE NOTICED THAT THE RMSE INCREASES... SINCE WE MAY NOT HAVE A GOOD
+CONNECTIVITY IN THE NEIGHBORHOOD...
+20. BUG IN RSSCOMPARISON... BECAUSE ACTUALLI WE DO NOT KNOW IF THE ANCHORS THAT MAKE THE TRIANGLE
+ARE IN DIRECT COMMUNICATION .. (THE ANCHORS HAVE TO BE INSIDE OF THE COMMUNICATION RANGE FOR DOING SO). WE HAVE
+TO MODIFY THE ALGORITHM... I HAVE MADE THE CORRECTION, BUT FEW ANCHORS ARE ESTIMATED.
+21. MARCA UN ERROR SI NO EXISTE NEIGHBOR_SHARED, PARA QUE EXISTA DEBE TENER 3 ANCHORS COMPARTIDOS EL NEIGHBOR CON EL
+ANCHOR. (ARREGLARLO, O CORRER OTRO TRIAL)
+
+_______________________________________________________________________________________________________
+
+AFTER BUGS FIXED IN APIT:
+
+
+WITH BUGS
+M=50 N=15 Res=0.5 ANR=1 R=4.58
+RMSE_est: 2.076727
+Estimatedcoordinates=23
+MAT Generated= Wbugswoutbugs_APIT_mytest
+
+WITHOUT BUGS
+M=50 N=15 Res=0.5 ANR=1 R=4.58
+RMSE_est: 2.878735.
+Estimatedcoordinates=11
+_________________________________________________________________________________________________________
+
+21. BUGS FIXED. NAME OF THE FILES DRAW_TRIANGLES_FST_PRUEBA AND RSS_COMPARISON_PRUEBA. THINKING IN AN APPROACH FOR A REFINEMENT PHASE IN ORDER TO IMPROVE THE ACCURACY OF THE ESTIMATIONS.
+(MULTILATERATION)
+22. MODIFIED ALGORITHM OF DEPLOY_NODES_RANDOM (OUTPUT PARAMETER EXTRA) AND CONNECTIVITY_ANR
+23. CHECAR MANANA PORQUE CON LAS CORRECCIONES SE ESTAN TENIENDO UN NUMERO DE NODOS DE MAS ESTIMADOS QUE CUANDO TENIA BUGS, NO DEBERIA DE SER AL REVES?
+24. TERMINAR HACER LAS PRUEBAS, SACAR GRAFICAS, Y EMPEZAR A CORRER MI TEST (LA VERSION CORREGIDA EN DONDE LOS NODOS PUEDEN COMUNICARSE)
+25. MODIFICAR LA PARTE DE NEIGHBORHOOD (CONSIDERAR TAMBIEN ANCHORS, PERO QUE ESTOS NO ESTEN EN LOS TRIANGULOS).
+EN LOS MODULOS DE CONNECTIVITY_ANR Y DRAWTRIANGLES_FST.
+26.m=120
+n=80
+
+mytest (2 rondas)
+42+21=63 nodes estimated
+error1=0.61184
+error_2=0.56606
+error_total=0.5967
+
+APIT (1 ronda)
+105 nodes estimated
+error=0.89669
+
+
+CONCLUSION MENOS ERROR PERO MENOS NODOS ESTIMADOS
+(ENTONCES, HACERLO RECURSIVO?) 
+26. INTRODUCCION DE MULTILATERACION (ATOMIC) Y MODIFICACION DE LOS PARAMETROS DE UNAS FUNCIONES (EMPMODEL), INTRODUCCION  DE WEIGHTS EN EL ESTIMADOR
+PARA DARLE MAS INTERVALO DE CONFIANZA AQUELLAS MEDICIONES QUE ESTEN MAS LEJANAS.
+27. IDEA DE INTRODUCIR UN REFINAMIENTO EN LOS NODOS QUE SE CALCULAN EN LA PRIMERA VEZ, CON APIT, APLICANDO MULTILATERACION. PARA LA SEGUNDA CORRIDA EN APIT
+ESTOS NODOS EN TEORIA TENDRIAN QUE SALIR CON UN RMSE MAS BAJO QUE AQUELLOS QUE SE PRESENTAN PARA LA SEGUNDA RONDA DE LA TABLA EN EXCEL. 
+28. SE PRUEBA APIT+MULT+APIT-> EXPLICACION DE PORQUE AUN CON REFINAMIENTO RMSE 2 NO BAJA
+29. APIT+APIT+MULT-> MULT GENERALMENTE AYUDA, PERO PORQUE CON ANCHORS QUE NO ESTAN BIEN POSICIONADOS NO SE PROPAGA EL ERROR
+EN EL PROCESO DE MULT?
+30. WE ARE GOING TO REPEAT ONE OF THE EXPERIMENTS OF THE PAPER: ANR=10, ND=8, AH=3-21, DOI=0, RANDOM
+31. WE ARE USING APIT_RANDOMNONOISE_REPEXP AS MODULE OF ITERATIVE_APIT FOR REPETING EXPERIMENTS. WE USE DRAWTRIANGLES_FST_DEF AND
+APITAGGREGATION_FST_PRUEBA
+
+PENDENT ISSUES:
+32. load Topology.mat en APIT_random_noise y APIT_randomnonoise_repexp, quitarlos ya que jala con topologia predeterminada
+habilitar deploy_nodes_def y variables globales.
+33. Change parameters for APIT_randomnonoise_repexp with APIT_random_noise (do, Pt, etc). We have to change them again
+34. RMSE error increases in APIT_withmynewtest than APIT_drawtriangles why?
+35. Check the number of correct decisions among mytest, APIT_algorithm and correct decisions
+36. Create a module (or globals?) for (do, Pt, np)..
+37. APIT_random_nonoise (NO ITERATIVE) and APIT_random_noise (ITERATIVE) obtain the same RMSE using the same topology.
+Both are equivalent when DOI=0. (That's good). Even both are ok according to the paper or they have bugs!.
+38. Make shorter the number of output parameters for drawtriangles_fst_def and drawtriangles_noise_def. Changes
+in all APIT_random_nonoise and APIT_random_noise files
+39. Run for DOI=0.1, varying N. Number of nodes, iterative and no-iterative.
+M=30, N varies, ANR=1, Res=0.5, R=4.57 Pt=-37.466, di=1, np=2.3, Grid=[0 10]
+40. Upload 
+*APIT_random_noise_iterative_parallel.m
+*Iterative_APIT_randomn_noise_parallel.m
+*empmodel_DOI
+*connectivity_DOI
+*drawtriangles_noise_def
+*APITAggregation_noise_def
+*assign_nodes
+41. Sanity check Schedule a different job pero combination of {M,N,DOI}, 10 different trials, -> after uploading the corrected version of empmodel_DOI
+42. Sanity check Run same cases for different DOIs,-> after uploading the corrected version of empmodel_DOI
+43. Empmodel->DOI corrected (bug interchanging node compared and target node, thus the angle is correct for DOI)
+44. We have to run again the cases of varying N and DOI. DONE
+45. Run RF profile.DONE
+46. Changes in drawtriangles_noise_def.m (in Matches). We have to upload drawtriangles_noise_def.m y empmodel_DOI.m DONE
+47. Changes in APITTest_surface, generation of TableNodesOutside and creation of a function that allows to compute the real TableNodeoutside
+and TableNodeinside table (checkrealinsideoroutside.m). These tables are compared with those obtained with RF profile and APIT Test.
+48. Modifications of the drawtriangles_noise_def.m (for comparison errors). Modification of APIT_test, do not invoke create nodes. and do not filter values of its Tablesoutisde
+49. I created two files Iterative_TableComparisonsRFAPIT.m and TablecomparisonRFAPIT.m
+50. We have to modify drawtriangles_noise_def.m (take out the return) and the parameters returned, and also the APIT_test if we want to run the APIT RFprofile... APIT_
+51. Mas modificaciones a drawtriangles_noise_def.m linea 340 , comente el return. Cambie la funcion por otro nombre a drawtrianlgescomparetables
+pero drawtrianges_noise_def tenemos aun que hacer las correcciones pertinentes (o copiarlo del que tenemos en SHARCNET)
+----
+52. Esta corregido drawtriangles_noise_def.m (parametros que retorna y adentro del codigo)
+53. Checar que en algunas funciones de APIT como APIT_random_noise iterative APITTestSurface debe de regresar
+el mismo tipo y numero de argumentos a como esta definido.
+__________________________________________________________________________
+
+54. Modificacion de APIT_random_noise en sacar una bandera de Endprogram porque puede que no existan puntos adentro del triangulo,
+modificacion de APITAggregation_noise_def
+55. The ideal case to work with sparse networks is using APIT_random_noise 
+56. Modificacion de APITTestSurface, recibe como parametro (dth_Neighborhood), modificar en todos los APIT_noise
+que invoquen esta funcion
+57. Haciendo pruebas con dth_RSS_Neighborhood=4.57.
+58. Corregido APIT_testsurface en TableComparisonRFApit con un parametro de entrada dth_RSS_Neighborhood
+59. Creacion de la funcion assignodes_parallel: (Transicion entre simple e iterative APIT), subirla al shell.
+y hacer script de mainiterativeparallel en el shell.
+
